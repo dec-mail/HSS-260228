@@ -548,6 +548,118 @@ async def list_applications(admin: User = Depends(require_admin), status: Option
     """List all applications (admin only)"""
     query = {}
     if status:
+
+
+# ============ PROPERTY ROUTES ============
+
+@api_router.post("/properties", response_model=Property)
+async def create_property(property_data: PropertyCreate, user: User = Depends(get_current_user)):
+    """Create a new property listing"""
+    property_id = f"prop_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    prop_dict = property_data.model_dump()
+    prop_dict["property_id"] = property_id
+    prop_dict["added_by_user_id"] = user.user_id
+    prop_dict["status"] = "active"
+    prop_dict["created_at"] = now
+    prop_dict["updated_at"] = now
+    
+    await db.properties.insert_one(prop_dict)
+    
+    return Property(**prop_dict)
+
+@api_router.post("/properties/bulk")
+async def bulk_create_properties(request: Request, user: User = Depends(get_current_user)):
+    """Bulk create properties from CSV data"""
+    body = await request.json()
+    properties_data = body.get("properties", [])
+    
+    if not properties_data:
+        raise HTTPException(status_code=400, detail="No properties provided")
+    
+    created_properties = []
+    errors = []
+    
+    for idx, prop_data in enumerate(properties_data):
+        try:
+            property_id = f"prop_{uuid.uuid4().hex[:12]}"
+            now = datetime.now(timezone.utc).isoformat()
+            
+            prop_dict = {
+                "property_id": property_id,
+                "added_by_user_id": user.user_id,
+                "status": "active",
+                "created_at": now,
+                "updated_at": now,
+                **prop_data
+            }
+            
+            await db.properties.insert_one(prop_dict)
+            created_properties.append(property_id)
+        except Exception as e:
+            errors.append({"row": idx + 1, "error": str(e)})
+    
+    return {
+        "created": len(created_properties),
+        "errors": errors,
+        "property_ids": created_properties
+    }
+
+@api_router.get("/properties", response_model=List[Property])
+async def list_properties(status: Optional[str] = None):
+    """List all active properties (public endpoint)"""
+    query = {}
+    if status:
+        query["status"] = status
+    else:
+        query["status"] = "active"
+    
+    properties = await db.properties.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return properties
+
+@api_router.get("/properties/{property_id}", response_model=Property)
+async def get_property(property_id: str):
+    """Get property details"""
+    prop_doc = await db.properties.find_one({"property_id": property_id}, {"_id": 0})
+    if not prop_doc:
+        raise HTTPException(status_code=404, detail="Property not found")
+    return Property(**prop_doc)
+
+@api_router.patch("/properties/{property_id}")
+async def update_property(property_id: str, updates: dict, user: User = Depends(get_current_user)):
+    """Update property details"""
+    prop_doc = await db.properties.find_one({"property_id": property_id}, {"_id": 0})
+    if not prop_doc:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Check permission
+    if prop_doc["added_by_user_id"] != user.user_id and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to update this property")
+    
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.properties.update_one({"property_id": property_id}, {"$set": updates})
+    
+    return {"message": "Property updated"}
+
+@api_router.delete("/properties/{property_id}")
+async def delete_property(property_id: str, user: User = Depends(get_current_user)):
+    """Delete property (soft delete - set to inactive)"""
+    prop_doc = await db.properties.find_one({"property_id": property_id}, {"_id": 0})
+    if not prop_doc:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Check permission
+    if prop_doc["added_by_user_id"] != user.user_id and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this property")
+    
+    await db.properties.update_one(
+        {"property_id": property_id},
+        {"$set": {"status": "inactive", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Property deleted"}
+
         query["status"] = status
     
     applications = await db.applications.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
