@@ -75,8 +75,8 @@ const ApplicationForm = () => {
     const newErrors = {};
     
     if (step === 1) {
-      if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
-      if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required';
+      if (!formData.first_name.trim()) newErrors.first_name = 'Given name is required';
+      if (!formData.last_name.trim()) newErrors.last_name = 'Family name is required';
       if (!formData.email.trim()) newErrors.email = 'Email is required';
       if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
       if (!formData.date_of_birth) newErrors.date_of_birth = 'Date of birth is required';
@@ -173,7 +173,7 @@ const ApplicationForm = () => {
               
               <div className="form-row">
                 <div className="form-group">
-                  <label className="input-label">First Name *</label>
+                  <label className="input-label">Given Name *</label>
                   <input
                     type="text"
                     name="first_name"
@@ -185,7 +185,7 @@ const ApplicationForm = () => {
                   {errors.first_name && <span className="error-message">{errors.first_name}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="input-label">Last Name *</label>
+                  <label className="input-label">Family Name *</label>
                   <input
                     type="text"
                     name="last_name"
