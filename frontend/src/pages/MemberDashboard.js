@@ -95,9 +95,12 @@ const MemberDashboard = () => {
       <header className="dashboard-header">
         <div className="container">
           <div className="header-content">
-            <div>
-              <h1>Member Dashboard</h1>
-              {currentUser && <p className="welcome-text">Welcome, {currentUser.name}!</p>}
+            <div className="header-left">
+              <img src="/logo.png" alt="House Sharing Seniors" className="dashboard-logo" />
+              <div>
+                <h1>Member Dashboard</h1>
+                {currentUser && <p className="welcome-text">Welcome, {currentUser.name}!</p>}
+              </div>
             </div>
             <button className="btn btn-secondary" onClick={handleLogout} data-testid="logout-btn">
               Logout

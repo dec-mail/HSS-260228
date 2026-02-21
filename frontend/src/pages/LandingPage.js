@@ -12,7 +12,7 @@ const LandingPage = () => {
         <div className="container">
           <div className="header-content">
             <div className="logo">
-              <h2>House Sharing Seniors</h2>
+              <img src="/logo.png" alt="House Sharing Seniors" className="logo-image" />
             </div>
             <nav className="header-nav">
               <button 

@@ -99,7 +99,10 @@ const AdminDashboard = () => {
       <header className="dashboard-header">
         <div className="container">
           <div className="header-content">
-            <h1>Admin Dashboard</h1>
+            <div>
+              <img src="/logo.png" alt="House Sharing Seniors" className="dashboard-logo" />
+              <h1>Admin Dashboard</h1>
+            </div>
             <button className="btn btn-secondary" onClick={handleLogout} data-testid="logout-btn">
               Logout
             </button>
