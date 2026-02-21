@@ -456,5 +456,4 @@ function renderPersonalDetails(formData, handleInputChange, errors) {
   );
 }
 
-// Continue with remaining steps in next file due to size...
 export default ApplicationFormNew;
