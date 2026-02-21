@@ -424,7 +424,7 @@ export function renderUsefulItems(formData, handleInputChange, errors) {
       <h2>Useful Items You Could Bring</h2>
       <p className="step-description">What items could you contribute to the shared household?</p>
       
-      <div className="checkbox-grid three-col">
+      <div className="checkbox-grid two-col">
         {itemOptions.map(item => (
           <label key={item} className="checkbox-label">
             <input
