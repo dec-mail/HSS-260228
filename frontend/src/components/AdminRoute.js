@@ -16,8 +16,10 @@ const AdminRoute = ({ children }) => {
   useEffect(() => {
     if (location.state?.user) {
       if (location.state.user.role !== 'admin') {
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
+        return;
       }
+      setIsAuthenticated(true);
       return;
     }
 
@@ -26,17 +28,18 @@ const AdminRoute = ({ children }) => {
         const response = await axios.get(`${API}/auth/me`, {
           withCredentials: true
         });
-        setUser(response.data);
         
         if (response.data.role !== 'admin') {
-          navigate('/dashboard');
+          setIsAuthenticated(false);
+          navigate('/dashboard', { replace: true });
           return;
         }
         
+        setUser(response.data);
         setIsAuthenticated(true);
       } catch (error) {
         setIsAuthenticated(false);
-        navigate('/');
+        navigate('/', { replace: true });
       }
     };
 
