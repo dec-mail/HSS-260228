@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
-import ApplicationForm from './pages/ApplicationForm';
+import StartApplication from './pages/StartApplication';
+import ResumeApplication from './pages/ResumeApplication';
+import ApplicationFormNew from './pages/ApplicationFormNew';
 import AdminDashboard from './pages/AdminDashboard';
 import MemberDashboard from './pages/MemberDashboard';
 import AuthCallback from './pages/AuthCallback';
@@ -20,7 +22,9 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/apply" element={<ApplicationForm />} />
+      <Route path="/apply" element={<StartApplication />} />
+      <Route path="/apply/resume" element={<ResumeApplication />} />
+      <Route path="/apply/form" element={<ApplicationFormNew />} />
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
     </Routes>
