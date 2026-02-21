@@ -53,6 +53,7 @@ class Application(BaseModel):
     application_id: str
     
     # Step 1: Personal Details
+    shared_housing_type: str
     first_name: str
     last_name: str
     email: EmailStr
@@ -90,7 +91,6 @@ class Application(BaseModel):
     
     # Step 6: Housemate Preferences
     preferred_age_range: str
-    preferred_gender: str
     preferred_location: str
     preferred_interests: str
     
@@ -100,6 +100,7 @@ class Application(BaseModel):
     updated_at: str
     
 class ApplicationCreate(BaseModel):
+    shared_housing_type: str
     first_name: str
     last_name: str
     email: EmailStr
@@ -127,7 +128,6 @@ class ApplicationCreate(BaseModel):
     criminal_details: Optional[str] = None
     references: str
     preferred_age_range: str
-    preferred_gender: str
     preferred_location: str
     preferred_interests: str
 
