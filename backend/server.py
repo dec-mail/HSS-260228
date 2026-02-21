@@ -158,6 +158,63 @@ class AuditLog(BaseModel):
     new_status: Optional[str] = None
     timestamp: str
 
+
+class Property(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    property_id: str
+    added_by_user_id: str
+    
+    # Property Details
+    property_type: str
+    address: str
+    city: str
+    state: str
+    postcode: str
+    
+    # Accommodation Details
+    total_bedrooms: int
+    available_bedrooms: int
+    total_bathrooms: int
+    
+    # Financial
+    weekly_rent_per_person: float
+    bond_required: Optional[float] = None
+    
+    # Amenities
+    amenities: List[str]
+    
+    # Availability
+    available_from: str
+    
+    # Images
+    images: List[str]
+    
+    # Description
+    description: str
+    
+    # Status
+    status: Literal["active", "inactive", "pending"] = "active"
+    
+    # Metadata
+    created_at: str
+    updated_at: str
+
+class PropertyCreate(BaseModel):
+    property_type: str
+    address: str
+    city: str
+    state: str
+    postcode: str
+    total_bedrooms: int
+    available_bedrooms: int
+    total_bathrooms: int
+    weekly_rent_per_person: float
+    bond_required: Optional[float] = None
+    amenities: List[str]
+    available_from: str
+    images: List[str]
+    description: str
+
 # ============ AUTH HELPERS ============
 
 async def get_current_user(request: Request) -> User:
