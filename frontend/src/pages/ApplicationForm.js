@@ -15,6 +15,7 @@ const ApplicationForm = () => {
   
   const [formData, setFormData] = useState({
     // Step 1: Personal Details
+    shared_housing_type: 'single_female',
     first_name: '',
     last_name: '',
     email: '',
@@ -171,6 +172,24 @@ const ApplicationForm = () => {
               <h2>Personal Details</h2>
               <p className="step-description">Please provide your basic information.</p>
               
+              <div className="form-group">
+                <label className="input-label">Shared Housing Type Wanted *</label>
+                <select
+                  name="shared_housing_type"
+                  value={formData.shared_housing_type}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  data-testid="housing-type-select"
+                >
+                  <option value="single_female">Single Female</option>
+                  <option value="single_male">Single Male</option>
+                  <option value="couples">Couples</option>
+                </select>
+                <p className="field-hint" style={{marginTop: '8px', fontStyle: 'italic'}}>
+                  Note: HSS policy ensures comfort and security - all properties are single-gender households, except for couples.
+                </p>
+              </div>
+
               <div className="form-row">
                 <div className="form-group">
                   <label className="input-label">Given Name *</label>
@@ -595,21 +614,6 @@ const ApplicationForm = () => {
               </div>
 
               <div className="form-group">
-                <label className="input-label">Preferred Gender *</label>
-                <select
-                  name="preferred_gender"
-                  value={formData.preferred_gender}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  data-testid="gender-select"
-                >
-                  <option value="any">Any</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-
-              <div className="form-group">
                 <label className="input-label">Preferred Location *</label>
                 <input
                   type="text"
@@ -647,6 +651,7 @@ const ApplicationForm = () => {
               
               <div className="review-section">
                 <h3>Personal Details</h3>
+                <p><strong>Shared Housing Type:</strong> {formData.shared_housing_type === 'single_female' ? 'Single Female' : formData.shared_housing_type === 'single_male' ? 'Single Male' : 'Couples'}</p>
                 <p><strong>Name:</strong> {formData.first_name} {formData.last_name}</p>
                 <p><strong>Email:</strong> {formData.email}</p>
                 <p><strong>Phone:</strong> {formData.phone}</p>
@@ -677,7 +682,6 @@ const ApplicationForm = () => {
               <div className="review-section">
                 <h3>Housemate Preferences</h3>
                 <p><strong>Age Range:</strong> {formData.preferred_age_range}</p>
-                <p><strong>Gender:</strong> {formData.preferred_gender}</p>
                 <p><strong>Location:</strong> {formData.preferred_location}</p>
               </div>
 
