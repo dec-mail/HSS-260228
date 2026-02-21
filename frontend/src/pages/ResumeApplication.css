@@ -1,0 +1,96 @@
+.resume-application {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 40px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resume-container {
+  max-width: 600px;
+  width: 100%;
+  background: white;
+  padding: 48px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 15px;
+  margin-bottom: 32px;
+  transition: color 0.2s ease;
+}
+
+.back-home:hover {
+  color: #2563eb;
+}
+
+.home-icon {
+  font-size: 20px;
+}
+
+.resume-container h1 {
+  font-size: 32px;
+  color: #1a2332;
+  margin-bottom: 16px;
+}
+
+.resume-subtitle {
+  font-size: 18px;
+  color: #6b7280;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.resume-form {
+  margin-bottom: 32px;
+}
+
+.resume-form .form-group {
+  margin-bottom: 24px;
+}
+
+.resume-form .btn-large {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  margin-top: 8px;
+}
+
+.field-hint {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+.start-link {
+  text-align: center;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.start-link a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.start-link a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .resume-container {
+    padding: 32px 24px;
+  }
+  
+  .resume-container h1 {
+    font-size: 28px;
+  }
+}
