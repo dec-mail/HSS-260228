@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import StartApplication from './pages/StartApplication';
 import ResumeApplication from './pages/ResumeApplication';
 import ApplicationFormNew from './pages/ApplicationFormNew';
+import AddProperty from './pages/AddProperty';
 import AdminDashboard from './pages/AdminDashboard';
 import MemberDashboard from './pages/MemberDashboard';
 import AuthCallback from './pages/AuthCallback';
@@ -25,6 +26,7 @@ function AppRouter() {
       <Route path="/apply" element={<StartApplication />} />
       <Route path="/apply/resume" element={<ResumeApplication />} />
       <Route path="/apply/form" element={<ApplicationFormNew />} />
+      <Route path="/properties/add" element={<ProtectedRoute><AddProperty /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
     </Routes>
