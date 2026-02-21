@@ -63,23 +63,23 @@ const LandingPage = () => {
           <div className="steps-grid">
             <div className="step-card" data-testid="step-1">
               <div className="step-number">1</div>
-              <h3>Apply Online</h3>
-              <p>Complete a simple, guided application form sharing your details, preferences, and what you're looking for in a housemate.</p>
+              <h3>Complete the Application</h3>
+              <p>Fill out our detailed intake form about your needs, preferences, and lifestyle.</p>
             </div>
             <div className="step-card" data-testid="step-2">
               <div className="step-number">2</div>
-              <h3>We Review</h3>
-              <p>Our team carefully reviews each application to ensure safety and suitability for the House Sharing Seniors community.</p>
+              <h3>Admin Review</h3>
+              <p>Our team reviews your application and may contact you for additional information.</p>
             </div>
             <div className="step-card" data-testid="step-3">
               <div className="step-number">3</div>
               <h3>Get Approved</h3>
-              <p>Once approved, you'll receive access to our platform to view profiles of other verified Age Pensioners.</p>
+              <p>Once approved, you'll receive a user account and can view potential housemates.</p>
             </div>
             <div className="step-card" data-testid="step-4">
               <div className="step-number">4</div>
-              <h3>Share & Save</h3>
-              <p>Connect with compatible housemates in your area. Share household costs and enjoy the benefits of community living.</p>
+              <h3>Find Your Match</h3>
+              <p>Browse anonymised profiles and shortlist compatible housemates.</p>
             </div>
           </div>
         </div>
