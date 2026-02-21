@@ -416,20 +416,32 @@ async def update_application_status(
 
 # ============ MEMBER ROUTES ============
 
-@api_router.get("/members", response_model=List[User])
+@api_router.get("/members")
 async def list_members(user: User = Depends(get_current_user)):
     """List all approved members (anonymized for regular users, full for admins)"""
-    members = await db.users.find({"role": "member"}, {"_id": 0}).to_list(1000)
-    
-    # Anonymize for non-admin users
-    if user.role != "admin":
-        for member in members:
-            # Hide email, show only first name
-            member["email"] = "***@***.***"
-            name_parts = member["name"].split()
-            member["name"] = name_parts[0] if name_parts else "Member"
-    
-    return members
+    try:
+        members = await db.users.find({"role": "member"}, {"_id": 0}).to_list(1000)
+        
+        # Anonymize for non-admin users
+        if user.role != "admin":
+            anonymized_members = []
+            for member in members:
+                # Create anonymized copy
+                anonymized = {
+                    "user_id": member["user_id"],
+                    "email": "***@***.***",
+                    "name": member["name"].split()[0] if member["name"] else "Member",
+                    "picture": member.get("picture"),
+                    "role": member["role"],
+                    "created_at": member["created_at"]
+                }
+                anonymized_members.append(anonymized)
+            return anonymized_members
+        
+        return members
+    except Exception as e:
+        logger.error(f"Error fetching members: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch members")
 
 # ============ SHORTLIST ROUTES ============
 
