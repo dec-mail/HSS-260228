@@ -1,0 +1,269 @@
+.admin-dashboard {
+  min-height: 100vh;
+  background: #f8fafb;
+}
+
+.dashboard-header {
+  background: white;
+  padding: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-header .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-header h1 {
+  font-size: 28px;
+  color: #1a2332;
+  margin: 0;
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+  padding: 32px 0;
+  min-height: calc(100vh - 100px);
+}
+
+/* Sidebar */
+.applications-sidebar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.filter-bar {
+  padding: 24px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.filter-bar h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #1a2332;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.applications-list {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+}
+
+.application-item {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.application-item:hover {
+  background: #f8fafb;
+}
+
+.application-item.active {
+  background: #eff6ff;
+  border-left: 4px solid #2563eb;
+}
+
+.app-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.app-item-header h3 {
+  font-size: 16px;
+  color: #1a2332;
+  margin: 0;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.status-approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.app-item-email {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0;
+}
+
+.app-item-date {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.no-applications {
+  padding: 40px 24px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Main Content */
+.application-details {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+  overflow-y: auto;
+  max-height: calc(100vh - 150px);
+}
+
+.no-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.details-header h2 {
+  font-size: 28px;
+  color: #1a2332;
+  margin: 0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.details-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.details-section {
+  background: #f8fafb;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.details-section h3 {
+  font-size: 20px;
+  color: #1a2332;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+/* Notes Section */
+.notes-section {
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+}
+
+.notes-list {
+  margin-bottom: 20px;
+}
+
+.note-item {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.note-item p {
+  margin: 0 0 8px 0;
+  color: #1a2332;
+}
+
+.note-item small {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.no-notes {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.add-note {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-note .btn {
+  align-self: flex-end;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .applications-sidebar {
+    max-height: 400px;
+  }
+  
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
