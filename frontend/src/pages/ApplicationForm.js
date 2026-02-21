@@ -593,8 +593,8 @@ const ApplicationForm = () => {
           {/* Step 6: Housemate Preferences */}
           {currentStep === 6 && (
             <div className="form-step" data-testid="step-6">
-              <h2>Housemate Preferences</h2>
-              <p className="step-description">What are you looking for in a housemate?</p>
+              <h2>Sharing Preferences</h2>
+              <p className="step-description">Help us find compatible housemates to share costs with.</p>
               
               <div className="form-group">
                 <label className="input-label">Preferred Age Range *</label>
@@ -628,14 +628,14 @@ const ApplicationForm = () => {
               </div>
 
               <div className="form-group">
-                <label className="input-label">Preferred Housemate Interests *</label>
+                <label className="input-label">Preferred Shared Interests *</label>
                 <textarea
                   name="preferred_interests"
                   value={formData.preferred_interests}
                   onChange={handleInputChange}
                   className="input-field"
                   rows="3"
-                  placeholder="What interests would you like your housemate to have?"
+                  placeholder="What interests would help create a compatible household?"
                   data-testid="preferred-interests-textarea"
                 />
                 {errors.preferred_interests && <span className="error-message">{errors.preferred_interests}</span>}
@@ -680,7 +680,7 @@ const ApplicationForm = () => {
               </div>
 
               <div className="review-section">
-                <h3>Housemate Preferences</h3>
+                <h3>Sharing Preferences</h3>
                 <p><strong>Age Range:</strong> {formData.preferred_age_range}</p>
                 <p><strong>Location:</strong> {formData.preferred_location}</p>
               </div>

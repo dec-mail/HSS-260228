@@ -36,12 +36,12 @@ const LandingPage = () => {
         <div className="container">
           <div className="hero-content">
             <h1 className="hero-title" data-testid="hero-title">
-              Safe, Affordable & <br />Companionable Housing <br />for Age Pensioners
+              Reduce Your Rent & <br />Living Costs Through <br />Shared Housing
             </h1>
             <p className="hero-subtitle" data-testid="hero-subtitle">
-              Connect with like-minded Australian Age Pensioners for <br />
-              trusted house-sharing arrangements. Combat isolation, <br />
-              reduce housing costs, and find your ideal housemate.
+              Australian Age Pensioners reducing housing costs by 40-60% through <br />
+              safe, vetted shared living arrangements. Cut rent, electricity bills, <br />
+              and household expenses while living in a compatible community.
             </p>
             <div className="hero-cta">
               <button 
@@ -78,8 +78,8 @@ const LandingPage = () => {
             </div>
             <div className="step-card" data-testid="step-4">
               <div className="step-number">4</div>
-              <h3>Find Your Match</h3>
-              <p>Browse anonymized profiles, shortlist potential housemates, and connect with people who share your lifestyle and values.</p>
+              <h3>Share & Save</h3>
+              <p>Connect with compatible housemates in your area. Share household costs and enjoy the benefits of community living.</p>
             </div>
           </div>
         </div>
@@ -110,23 +110,23 @@ const LandingPage = () => {
       {/* Trust Signals */}
       <section className="trust-signals">
         <div className="container">
-          <h3 className="trust-title" data-testid="trust-title">Your Privacy & Safety Matter</h3>
+          <h3 className="trust-title" data-testid="trust-title">Reduce Your Living Costs Today</h3>
           <p className="trust-text">
-            We take your privacy seriously. All applications are confidential, <br />
-            and profiles are anonymized until you choose to connect.
+            Typical savings: 40-60% on rent, plus shared electricity, internet, and household expenses. <br />
+            All arrangements are vetted and profiles verified for your security.
           </p>
           <div className="trust-badges">
             <div className="trust-badge" data-testid="trust-badge-1">
-              <span className="badge-icon">🔒</span>
-              <span>Secure & Private</span>
+              <span className="badge-icon">💰</span>
+              <span>Reduce Rent & Bills</span>
             </div>
             <div className="trust-badge" data-testid="trust-badge-2">
               <span className="badge-icon">✓</span>
-              <span>Verified Members</span>
+              <span>Vetted & Verified</span>
             </div>
             <div className="trust-badge" data-testid="trust-badge-3">
-              <span className="badge-icon">👥</span>
-              <span>Community Focused</span>
+              <span className="badge-icon">🏘</span>
+              <span>Compatible Community</span>
             </div>
           </div>
         </div>

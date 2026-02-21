@@ -133,7 +133,7 @@ const MemberDashboard = () => {
           <div className="members-section" data-testid="browse-section">
             <div className="section-header">
               <h2>Available Members</h2>
-              <p>Connect with verified Age Pensioners looking for housemates</p>
+              <p>Connect with verified pensioners to share housing costs</p>
             </div>
 
             {loading ? (
@@ -187,7 +187,7 @@ const MemberDashboard = () => {
           <div className="shortlist-section" data-testid="shortlist-section">
             <div className="section-header">
               <h2>My Shortlist</h2>
-              <p>Members you're interested in connecting with</p>
+              <p>Members you're interested in sharing costs with</p>
             </div>
 
             {shortlists.length === 0 ? (
