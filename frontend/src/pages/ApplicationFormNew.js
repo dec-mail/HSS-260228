@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './ApplicationFormNew.css';
+import {
+  renderFinancial,
+  renderLifestyle,
+  renderHousehold,
+  renderSafety,
+  renderPreferences,
+  renderUsefulItems,
+  renderReview
+} from './ApplicationFormSteps';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -306,6 +315,7 @@ function renderStep(step, formData, handleInputChange, errors) {
       return null;
   }
 }
+export { renderStep };
 
 // Step 1: Personal Details
 function renderPersonalDetails(formData, handleInputChange, errors) {
