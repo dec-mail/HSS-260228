@@ -291,6 +291,157 @@ async def get_me(user: User = Depends(get_current_user)):
     """Get current authenticated user"""
     return user.model_dump()
 
+
+# ============ DRAFT APPLICATION ROUTES (Save/Resume) ============
+
+def generate_access_code():
+    """Generate a random 6-character access code"""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+@api_router.post("/applications/start")
+async def start_application(request: Request):
+    """Start a new application - generate access code"""
+    body = await request.json()
+    email = body.get("email")
+    
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+    
+    # Check if there's an existing draft for this email
+    existing = await db.draft_applications.find_one({"email": email, "status": "draft"}, {"_id": 0})
+    
+    if existing:
+        return {"access_code": existing["access_code"], "existing": True}
+    
+    # Create new draft
+    access_code = generate_access_code()
+    draft = {
+        "email": email,
+        "access_code": access_code,
+        "status": "draft",
+        "current_step": 1,
+        "data": {},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_updated": datetime.now(timezone.utc).isoformat()
+    }
+    await db.draft_applications.insert_one(draft)
+    
+    # Send email with access code (mocked)
+    send_email_notification(
+        to_email=email,
+        subject="Your House Sharing Seniors Application",
+        body=f"Your application access code is: {access_code}\\n\\nUse this code to resume your application at any time."
+    )
+    
+    return {"access_code": access_code, "existing": False}
+
+@api_router.post("/applications/resume")
+async def resume_application(request: Request):
+    """Resume an existing application"""
+    body = await request.json()
+    email = body.get("email")
+    access_code = body.get("access_code")
+    
+    if not email or not access_code:
+        raise HTTPException(status_code=400, detail="Email and access code required")
+    
+    draft = await db.draft_applications.find_one({
+        "email": email,
+        "access_code": access_code.upper(),
+        "status": "draft"
+    }, {"_id": 0})
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    return {"application": draft.get("data", {}), "current_step": draft.get("current_step", 1)}
+
+@api_router.post("/applications/save")
+async def save_application_progress(request: Request):
+    """Save application progress"""
+    body = await request.json()
+    email = body.get("email")
+    access_code = body.get("access_code")
+    
+    if not email or not access_code:
+        raise HTTPException(status_code=400, detail="Email and access code required")
+    
+    # Update draft
+    result = await db.draft_applications.update_one(
+        {"email": email, "access_code": access_code.upper()},
+        {"$set": {
+            "data": body,
+            "current_step": body.get("current_step", 1),
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        # Try to create if doesn't exist
+        draft = {
+            "email": email,
+            "access_code": access_code.upper(),
+            "status": "draft",
+            "data": body,
+            "current_step": body.get("current_step", 1),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+        await db.draft_applications.insert_one(draft)
+    
+    return {"message": "Progress saved"}
+
+@api_router.post("/applications/submit")
+async def submit_application_final(request: Request):
+    """Submit completed application"""
+    body = await request.json()
+    email = body.get("email")
+    access_code = body.get("access_code")
+    
+    if not email or not access_code:
+        raise HTTPException(status_code=400, detail="Email and access code required")
+    
+    # Create application from draft
+    application_id = f"app_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    app_dict = {
+        "application_id": application_id,
+        **body,
+        "status": "pending",
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    # Remove access_code and current_step from final application
+    app_dict.pop("access_code", None)
+    app_dict.pop("current_step", None)
+    app_dict.pop("last_updated", None)
+    
+    await db.applications.insert_one(app_dict)
+    
+    # Delete draft
+    await db.draft_applications.delete_one({"email": email, "access_code": access_code.upper()})
+    
+    # Send confirmation email (mocked)
+    send_email_notification(
+        to_email=email,
+        subject="Application Submitted - House Sharing Seniors",
+        body=f"Thank you for your application. We will review it and get back to you shortly."
+    )
+    
+    # Create audit log
+    log_dict = {
+        "log_id": f"log_{uuid.uuid4().hex[:12]}",
+        "application_id": application_id,
+        "action": "application_submitted",
+        "timestamp": now
+    }
+    await db.audit_logs.insert_one(log_dict)
+    
+    return {"application_id": application_id, "message": "Application submitted successfully"}
+
+
 @api_router.post("/auth/logout")
 async def logout(request: Request, response: Response, user: User = Depends(get_current_user)):
     """Logout and clear session"""
