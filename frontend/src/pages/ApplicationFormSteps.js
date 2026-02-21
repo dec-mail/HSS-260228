@@ -178,7 +178,7 @@ export function renderLifestyle(formData, handleInputChange, errors) {
 
       <div className="form-group">
         <label className="input-label">Hobbies and Interests</label>
-        <div className="checkbox-grid three-col">
+        <div className="checkbox-grid two-col">
           {hobbiesOptions.map(hobby => (
             <label key={hobby} className="checkbox-label">
               <input
@@ -287,7 +287,7 @@ export function renderHousehold(formData, handleInputChange, errors) {
             <option value="few_months">Every few months</option>
             <option value="monthly">Monthly</option>
             <option value="weekly">Weekly</option>
-            <option value="frequently">Very frequently</option>
+            <option value="daily">Daily</option>
           </select>
         </div>
         <div className="form-group">
