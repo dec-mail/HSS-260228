@@ -1,0 +1,89 @@
+.start-application {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 40px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.start-container {
+  max-width: 600px;
+  width: 100%;
+  background: white;
+  padding: 48px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 15px;
+  margin-bottom: 32px;
+  transition: color 0.2s ease;
+}
+
+.back-home:hover {
+  color: #2563eb;
+}
+
+.home-icon {
+  font-size: 20px;
+}
+
+.start-container h1 {
+  font-size: 32px;
+  color: #1a2332;
+  margin-bottom: 16px;
+}
+
+.start-subtitle {
+  font-size: 18px;
+  color: #6b7280;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.start-form {
+  margin-bottom: 32px;
+}
+
+.start-form .form-group {
+  margin-bottom: 24px;
+}
+
+.start-form .btn-large {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+}
+
+.resume-link {
+  text-align: center;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.resume-link a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.resume-link a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .start-container {
+    padding: 32px 24px;
+  }
+  
+  .start-container h1 {
+    font-size: 28px;
+  }
+}
