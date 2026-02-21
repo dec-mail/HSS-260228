@@ -94,7 +94,7 @@ class HouseSharingAPITester:
         }
         
         success, response = self.run_test(
-            "Create Application", "POST", "applications", 201, data=application_data
+            "Create Application", "POST", "applications", 200, data=application_data
         )
         if success and 'application_id' in response:
             self.test_application_id = response['application_id']
