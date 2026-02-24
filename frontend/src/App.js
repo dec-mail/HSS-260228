@@ -12,6 +12,17 @@ import MemberDashboard from './pages/MemberDashboard';
 import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+// Static Pages
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import PrivacyPage from './pages/PrivacyPage';
+import CookiePage from './pages/CookiePage';
+import TermsPage from './pages/TermsPage';
+import FAQPage from './pages/FAQPage';
+import SupportPage from './pages/SupportPage';
+import ResourcesPage from './pages/ResourcesPage';
+import SitemapPage from './pages/SitemapPage';
+import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
 function AppRouter() {
@@ -33,6 +44,18 @@ function AppRouter() {
       <Route path="/properties/:propertyId" element={<PropertyDetailPage />} />
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
+      {/* Static Pages */}
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/cookies" element={<CookiePage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/faq" element={<FAQPage />} />
+      <Route path="/support" element={<SupportPage />} />
+      <Route path="/resources" element={<ResourcesPage />} />
+      <Route path="/sitemap" element={<SitemapPage />} />
+      {/* 404 - Must be last */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
