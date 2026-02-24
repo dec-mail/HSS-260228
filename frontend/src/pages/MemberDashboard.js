@@ -9,16 +9,73 @@ const API = `${BACKEND_URL}/api`;
 const MemberDashboard = () => {
   const navigate = useNavigate();
   const [members, setMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
   const [shortlists, setShortlists] = useState([]);
   const [activeTab, setActiveTab] = useState('browse');
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // Search/Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    housingType: '',
+    state: '',
+    smokingStatus: ''
+  });
 
   useEffect(() => {
     fetchCurrentUser();
     fetchMembers();
     fetchShortlists();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [members, searchTerm, filters]);
+
+  const applyFilters = () => {
+    let filtered = [...members];
+    
+    // Search by name
+    if (searchTerm) {
+      filtered = filtered.filter(m => 
+        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Filter by housing type preference (if available in member data)
+    if (filters.housingType) {
+      filtered = filtered.filter(m => 
+        m.application_data?.shared_housing_type === filters.housingType
+      );
+    }
+    
+    // Filter by state (if available)
+    if (filters.state) {
+      filtered = filtered.filter(m => 
+        m.application_data?.state === filters.state
+      );
+    }
+    
+    // Filter by smoking status (if available)
+    if (filters.smokingStatus) {
+      filtered = filtered.filter(m => 
+        m.application_data?.smoking_status === filters.smokingStatus
+      );
+    }
+    
+    setFilteredMembers(filtered);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilters({
+      housingType: '',
+      state: '',
+      smokingStatus: ''
+    });
+  };
 
   const fetchCurrentUser = async () => {
     try {
