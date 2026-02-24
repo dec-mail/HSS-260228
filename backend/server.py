@@ -548,6 +548,14 @@ async def list_applications(admin: User = Depends(require_admin), status: Option
     """List all applications (admin only)"""
     query = {}
     if status:
+        query["status"] = status
+    
+    applications = []
+    cursor = db.applications.find(query).sort("created_at", -1)
+    async for doc in cursor:
+        doc.pop("_id", None)
+        applications.append(Application(**doc))
+    return applications
 
 
 # ============ PROPERTY ROUTES ============
