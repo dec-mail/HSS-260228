@@ -143,10 +143,34 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="landing-footer">
         <div className="container">
-          <p>&copy; 2026 House Sharing Seniors. All rights reserved.</p>
-          <p className="footer-links">
-            <a href="#privacy">Privacy Policy</a> | <a href="#terms">Terms of Service</a>
-          </p>
+          <div className="footer-grid">
+            <div className="footer-section">
+              <h4>About</h4>
+              <a href="/about">About Us</a>
+              <a href="/contact">Contact</a>
+              <a href="/faq">FAQ</a>
+            </div>
+            <div className="footer-section">
+              <h4>Resources</h4>
+              <a href="/support">Help & Support</a>
+              <a href="/resources">Downloads</a>
+              <a href="/sitemap">Sitemap</a>
+            </div>
+            <div className="footer-section">
+              <h4>Legal</h4>
+              <a href="/privacy">Privacy Policy</a>
+              <a href="/terms">Terms of Service</a>
+              <a href="/cookies">Cookie Policy</a>
+            </div>
+            <div className="footer-section">
+              <h4>Contact</h4>
+              <p>1800 HSS AUS (1800 477 287)</p>
+              <p>info@housesharingseniors.com.au</p>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>&copy; 2026 House Sharing Seniors. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>
