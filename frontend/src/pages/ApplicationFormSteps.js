@@ -447,6 +447,12 @@ export function renderUsefulItems(formData, handleInputChange, errors) {
   );
 }
 
+const housingTypeLabels = {
+  single_female: 'Single Female → Female Community (4-5 bedroom)',
+  single_male: 'Single Male → Male Community (4-5 bedroom)',
+  couples: 'Couples → Couples (mixed gender) Community (3-4 bedroom)'
+};
+
 export function renderReview(formData) {
   return (
     <div className="form-step" data-testid="step-8">
@@ -455,7 +461,7 @@ export function renderReview(formData) {
       
       <div className="review-section">
         <h3>Personal Details</h3>
-        <p><strong>Shared Housing Type:</strong> {formData.shared_housing_type?.replace('_', ' ')}</p>
+        <p><strong>Shared Housing Type:</strong> {housingTypeLabels[formData.shared_housing_type] || formData.shared_housing_type?.replace('_', ' ')}</p>
         <p><strong>Name:</strong> {formData.first_name} {formData.last_name}</p>
         <p><strong>Phone:</strong> {formData.phone}</p>
         <p><strong>Address:</strong> {formData.address}, {formData.city}, {formData.state} {formData.postcode}</p>
