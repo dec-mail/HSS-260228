@@ -193,13 +193,74 @@ const MemberDashboard = () => {
               <p>Connect with verified pensioners to share housing costs</p>
             </div>
 
+            {/* Search and Filter Bar */}
+            <div className="search-filter-bar">
+              <div className="search-input-wrapper">
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                  data-testid="member-search-input"
+                />
+              </div>
+              <div className="filter-controls">
+                <select 
+                  value={filters.housingType} 
+                  onChange={(e) => setFilters({...filters, housingType: e.target.value})}
+                  className="filter-select-sm"
+                  data-testid="housing-type-filter"
+                >
+                  <option value="">All Housing Types</option>
+                  <option value="single_female">Female Community</option>
+                  <option value="single_male">Male Community</option>
+                  <option value="couples">Couples Community</option>
+                </select>
+                <select 
+                  value={filters.state} 
+                  onChange={(e) => setFilters({...filters, state: e.target.value})}
+                  className="filter-select-sm"
+                  data-testid="state-filter"
+                >
+                  <option value="">All States</option>
+                  <option value="NSW">NSW</option>
+                  <option value="VIC">VIC</option>
+                  <option value="QLD">QLD</option>
+                  <option value="SA">SA</option>
+                  <option value="WA">WA</option>
+                  <option value="TAS">TAS</option>
+                  <option value="NT">NT</option>
+                  <option value="ACT">ACT</option>
+                </select>
+                <select 
+                  value={filters.smokingStatus} 
+                  onChange={(e) => setFilters({...filters, smokingStatus: e.target.value})}
+                  className="filter-select-sm"
+                  data-testid="smoking-filter"
+                >
+                  <option value="">Any Smoking Status</option>
+                  <option value="non_smoker">Non-smoker</option>
+                  <option value="smoker_outside">Smoker (outside)</option>
+                  <option value="vaper">Vaper</option>
+                </select>
+                {(searchTerm || filters.housingType || filters.state || filters.smokingStatus) && (
+                  <button className="clear-filters-btn-sm" onClick={clearFilters} data-testid="clear-filters-btn">
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <p className="results-count">{filteredMembers.filter(m => m.user_id !== currentUser?.user_id).length} members found</p>
+
             {loading ? (
               <div className="loading">Loading members...</div>
-            ) : members.length === 0 ? (
-              <p className="no-members">No members available at the moment</p>
+            ) : filteredMembers.length === 0 ? (
+              <p className="no-members">No members found matching your criteria</p>
             ) : (
               <div className="members-grid">
-                {members.filter(m => m.user_id !== currentUser?.user_id).map((member) => (
+                {filteredMembers.filter(m => m.user_id !== currentUser?.user_id).map((member) => (
                   <div key={member.user_id} className="member-card" data-testid={`member-card-${member.user_id}`}>
                     <div className="member-avatar">
                       {member.picture ? (
