@@ -668,11 +668,6 @@ async def delete_property(property_id: str, user: User = Depends(get_current_use
     
     return {"message": "Property deleted"}
 
-        query["status"] = status
-    
-    applications = await db.applications.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    return applications
-
 @api_router.get("/applications/{application_id}", response_model=Application)
 async def get_application(application_id: str, admin: User = Depends(require_admin)):
     """Get application details (admin only)"""
