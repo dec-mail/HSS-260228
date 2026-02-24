@@ -162,7 +162,7 @@
 - [ ] Real email notifications (Resend/SES)
 
 ### P2 (Nice to Have)
-- [ ] Static content pages (Terms, Privacy)
+- [x] Static content pages (About, Contact, Privacy, Terms, FAQ, Support, Resources, Sitemap, 404)
 - [ ] In-app messaging between members
 - [ ] Advanced member-matching algorithm
 
