@@ -17,6 +17,14 @@ const LandingPage = () => {
             <nav className="header-nav">
               <button 
                 className="btn btn-secondary" 
+                onClick={() => navigate('/properties')}
+                data-testid="browse-properties-btn"
+                style={{ marginRight: '12px' }}
+              >
+                Browse Properties
+              </button>
+              <button 
+                className="btn btn-secondary" 
                 onClick={() => {
                   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
                   const redirectUrl = window.location.origin + '/dashboard';
