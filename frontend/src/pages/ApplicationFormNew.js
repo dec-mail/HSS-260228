@@ -333,9 +333,9 @@ function renderPersonalDetails(formData, handleInputChange, errors) {
           className="input-field"
           data-testid="housing-type-select"
         >
-          <option value="single_female">Single Female</option>
-          <option value="single_male">Single Male</option>
-          <option value="couples">Couples</option>
+          <option value="single_female">Single Female → Female Community (4-5 bedroom)</option>
+          <option value="single_male">Single Male → Male Community (4-5 bedroom)</option>
+          <option value="couples">Couples → Couples (mixed gender) Community (3-4 bedroom)</option>
         </select>
         <p className="field-hint">HSS policy ensures comfort and security - all properties are single-gender households, except for couples.</p>
       </div>
