@@ -279,7 +279,13 @@ const PropertiesPage = () => {
                           <span className="price">${property.weekly_rent_per_person}</span>
                           <span className="period">/ week per person</span>
                         </div>
-                        <button className="btn btn-primary btn-sm">View Details</button>
+                        <button 
+                          className="btn btn-primary btn-sm"
+                          onClick={() => navigate(`/properties/${property.property_id}`)}
+                          data-testid={`view-property-${property.property_id}`}
+                        >
+                          View Details
+                        </button>
                       </div>
                     </div>
                   </div>
