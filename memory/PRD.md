@@ -183,6 +183,16 @@
 /properties/:id         - Property Detail Page
 /admin                  - Admin Dashboard (admin only)
 /dashboard              - Member Dashboard (auth required)
+/about                  - About Us Page
+/contact                - Contact Us Page (with form)
+/privacy                - Privacy Policy
+/cookies                - Cookie Policy
+/terms                  - Terms of Service
+/faq                    - Frequently Asked Questions
+/support                - Help & Support Center
+/resources              - Resources & Downloads
+/sitemap                - Sitemap
+*                       - 404 Not Found Page
 ```
 
 ## Notes
