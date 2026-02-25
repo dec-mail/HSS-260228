@@ -205,6 +205,10 @@ const AdminDashboard = () => {
             <div className="stat-number">{stats.members}</div>
             <div className="stat-label">Approved Members</div>
           </div>
+          <div className="stat-card stat-pending" onClick={() => setActiveTab('inquiries')}>
+            <div className="stat-number">{stats.interests}</div>
+            <div className="stat-label">New Inquiries</div>
+          </div>
         </div>
 
         {/* Tab Navigation */}
