@@ -106,7 +106,7 @@ const MemberDashboard = () => {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/members`, { withCredentials: true });
+      const response = await axios.get(`${API}/members`, getAuthConfig());
       setMembers(response.data);
     } catch (error) {
       console.error('Failed to fetch members:', error);
@@ -117,10 +117,51 @@ const MemberDashboard = () => {
 
   const fetchShortlists = async () => {
     try {
-      const response = await axios.get(`${API}/shortlists`, { withCredentials: true });
+      const response = await axios.get(`${API}/shortlists`, getAuthConfig());
       setShortlists(response.data);
     } catch (error) {
       console.error('Failed to fetch shortlists:', error);
+    }
+  };
+
+  const fetchFavorites = async () => {
+    try {
+      const response = await axios.get(`${API}/favorites`, getAuthConfig());
+      setFavorites(response.data);
+    } catch (error) {
+      console.error('Failed to fetch favorites:', error);
+    }
+  };
+
+  const toggleFavorite = async (itemId, itemType) => {
+    try {
+      const existing = favorites.find(f => f.item_id === itemId && f.item_type === itemType);
+      if (existing) {
+        await axios.delete(`${API}/favorites/${existing.favorite_id}`, getAuthConfig());
+        setFavorites(favorites.filter(f => f.favorite_id !== existing.favorite_id));
+      } else {
+        const response = await axios.post(`${API}/favorites`, { item_id: itemId, item_type: itemType }, getAuthConfig());
+        const newFav = response.data.favorite;
+        if (newFav) {
+          setFavorites([...favorites, newFav]);
+        }
+        fetchFavorites();
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
+
+  const isFavorited = (itemId, itemType) => {
+    return favorites.some(f => f.item_id === itemId && f.item_type === itemType);
+  };
+
+  const removeFavorite = async (favoriteId) => {
+    try {
+      await axios.delete(`${API}/favorites/${favoriteId}`, getAuthConfig());
+      setFavorites(favorites.filter(f => f.favorite_id !== favoriteId));
+    } catch (error) {
+      console.error('Failed to remove favorite:', error);
     }
   };
 
