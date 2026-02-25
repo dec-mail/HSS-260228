@@ -489,7 +489,7 @@ const MemberDashboard = () => {
                       {favorites.filter(f => f.item_type === 'property' && f.item_data).map((fav) => (
                         <div key={fav.favorite_id} className="member-card" style={{ cursor: 'pointer' }} data-testid={`fav-property-card-${fav.favorite_id}`}>
                           <div className="member-info" onClick={() => navigate(`/properties/${fav.item_id}`)}>
-                            <h3>{fav.item_data.address || `${fav.item_data.city}, ${fav.item_data.state}`}</h3>
+                            <h3>{fav.item_data.city}, {fav.item_data.state}</h3>
                             <p className="member-email">{fav.item_data.city}, {fav.item_data.state}</p>
                             <p style={{ color: '#2563eb', fontWeight: '700', fontSize: '18px' }}>${fav.item_data.weekly_rent_per_person}/week per bedroom</p>
                             <p style={{ fontSize: '12px', color: '#059669', margin: '2px 0 0' }}>Maximum CRA:<br/>Singles ${Math.max(0, fav.item_data.weekly_rent_per_person - 71.80).toFixed(2)}<br/>Couples ${Math.max(0, fav.item_data.weekly_rent_per_person - 101.50).toFixed(2)}</p>
