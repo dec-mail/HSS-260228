@@ -22,6 +22,12 @@ const MemberDashboard = () => {
     state: '',
     smokingStatus: ''
   });
+  
+  // Change password state
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState(null);
+  const [passwordError, setPasswordError] = useState(null);
 
   useEffect(() => {
     fetchCurrentUser();
