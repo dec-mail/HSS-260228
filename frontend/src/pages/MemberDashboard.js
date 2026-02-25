@@ -492,7 +492,12 @@ const MemberDashboard = () => {
                             <h3>{fav.item_data.city}, {fav.item_data.state}</h3>
                             <p className="member-email">{fav.item_data.city}, {fav.item_data.state}</p>
                             <p style={{ color: '#2563eb', fontWeight: '700', fontSize: '18px' }}>${fav.item_data.weekly_rent_per_person}/week per bedroom</p>
-                            <p style={{ fontSize: '12px', color: '#059669', margin: '2px 0 0' }}>Maximum CRA:<br/>Singles ${Math.max(0, fav.item_data.weekly_rent_per_person - 71.80).toFixed(2)}<br/>Couples ${Math.max(0, fav.item_data.weekly_rent_per_person - 101.50).toFixed(2)}</p>
+                            <p style={{ fontSize: '12px', color: '#059669', margin: '2px 0 0' }}>{(() => {
+                              const r = fav.item_data.weekly_rent_per_person;
+                              const sCRA = Math.min(71.80, Math.max(0, 0.75 * (r - 76)));
+                              const cCRA = Math.min(101.50, Math.max(0, 0.75 * (r - 123.10)));
+                              return <>Maximum CRA:<br/>Singles ${(r - sCRA).toFixed(2)}{sCRA > 0 ? ` (CRA $${sCRA.toFixed(2)})` : ' (no CRA)'}<br/>Couples ${(r - cCRA).toFixed(2)}{cCRA > 0 ? ` (CRA $${cCRA.toFixed(2)})` : ' (no CRA)'}</>;
+                            })()}</p>
                           </div>
                           <div className="member-actions">
                             <button className="btn btn-danger" onClick={() => removeFavorite(fav.favorite_id)} data-testid={`remove-fav-${fav.favorite_id}`}>

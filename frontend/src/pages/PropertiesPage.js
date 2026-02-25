@@ -281,7 +281,12 @@ const PropertiesPage = () => {
                           <span className="period">/ week per bedroom</span>
                         </div>
                         <div style={{ fontSize: '12px', color: '#059669', marginTop: '4px' }}>
-                          Maximum CRA:<br/>Singles ${Math.max(0, property.weekly_rent_per_person - 71.80).toFixed(2)}<br/>Couples ${Math.max(0, property.weekly_rent_per_person - 101.50).toFixed(2)}
+                          {(() => {
+                            const r = property.weekly_rent_per_person;
+                            const sCRA = Math.min(71.80, Math.max(0, 0.75 * (r - 76)));
+                            const cCRA = Math.min(101.50, Math.max(0, 0.75 * (r - 123.10)));
+                            return <>Maximum CRA:<br/>Singles ${(r - sCRA).toFixed(2)}{sCRA > 0 ? ` (CRA $${sCRA.toFixed(2)})` : ' (no CRA)'}<br/>Couples ${(r - cCRA).toFixed(2)}{cCRA > 0 ? ` (CRA $${cCRA.toFixed(2)})` : ' (no CRA)'}</>;
+                          })()}
                         </div>
                         <div className="property-actions">
                           <button 

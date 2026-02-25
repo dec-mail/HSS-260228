@@ -111,7 +111,12 @@ const LandingPage = () => {
                         {prop.total_bedrooms && <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: '600' }}>Total rent: ${(prop.weekly_rent_per_person * prop.total_bedrooms).toFixed(0)}/week<br/>({prop.total_bedrooms} bedrooms)</div>}
                         <div className="carousel-price">${prop.weekly_rent_per_person}<span>/week per bedroom</span></div>
                         <div style={{ fontSize: '11px', color: '#059669' }}>
-                          Maximum CRA:<br/>Singles ${Math.max(0, prop.weekly_rent_per_person - 71.80).toFixed(2)}<br/>Couples ${Math.max(0, prop.weekly_rent_per_person - 101.50).toFixed(2)}
+                          {(() => {
+                            const r = prop.weekly_rent_per_person;
+                            const sCRA = Math.min(71.80, Math.max(0, 0.75 * (r - 76)));
+                            const cCRA = Math.min(101.50, Math.max(0, 0.75 * (r - 123.10)));
+                            return <>Maximum CRA:<br/>Singles ${(r - sCRA).toFixed(2)}{sCRA > 0 ? ` (CRA $${sCRA.toFixed(2)})` : ' (no CRA)'}<br/>Couples ${(r - cCRA).toFixed(2)}{cCRA > 0 ? ` (CRA $${cCRA.toFixed(2)})` : ' (no CRA)'}</>;
+                          })()}
                         </div>
                         <div className="carousel-meta">
                           {prop.available_bedrooms && <span>{prop.available_bedrooms} bed{prop.available_bedrooms > 1 ? 's' : ''} avail</span>}
