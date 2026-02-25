@@ -252,40 +252,55 @@ class PropertyCreate(BaseModel):
 
 # ============ AUTH HELPERS ============
 
+def hash_password(password: str) -> str:
+    """Hash password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash"""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def create_jwt_token(user_id: str, email: str, role: str) -> str:
+    """Create JWT token"""
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "role": role,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRY_HOURS),
+        "iat": datetime.now(timezone.utc)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_jwt_token(token: str) -> dict:
+    """Decode and verify JWT token"""
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 async def get_current_user(request: Request) -> User:
-    """Extract user from session token (cookie or Authorization header)"""
-    # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    
-    session_token = None
+    """Extract user from JWT token (cookie or Authorization header)"""
+    token = None
     
     # Check cookie first
-    session_token = request.cookies.get("session_token")
+    token = request.cookies.get("auth_token")
     
     # Fallback to Authorization header
-    if not session_token:
+    if not token:
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
-            session_token = auth_header.replace("Bearer ", "")
+            token = auth_header.replace("Bearer ", "")
     
-    if not session_token:
+    if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    # Find session in database
-    session_doc = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
-    if not session_doc:
-        raise HTTPException(status_code=401, detail="Invalid session")
+    # Decode token
+    payload = decode_jwt_token(token)
     
-    # Check expiry
-    expires_at = session_doc["expires_at"]
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=401, detail="Session expired")
-    
-    # Get user
-    user_doc = await db.users.find_one({"user_id": session_doc["user_id"]}, {"_id": 0})
+    # Get user from database
+    user_doc = await db.users.find_one({"user_id": payload["user_id"]}, {"_id": 0})
     if not user_doc:
         raise HTTPException(status_code=401, detail="User not found")
     
@@ -297,14 +312,6 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
-# ============ LEGACY MOCK EMAIL HELPER (DEPRECATED - Now using Resend) ============
-
-def send_email_notification(to_email: str, subject: str, body: str):
-    """DEPRECATED: Mock email notification - keeping for backwards compatibility"""
-    logger.info(f"[DEPRECATED EMAIL MOCK] To: {to_email}")
-    logger.info(f"[DEPRECATED EMAIL MOCK] Subject: {subject}")
-    # Real emails are now sent via email_service.py using Resend
-
 # ============ ROUTES ============
 
 @api_router.get("/")
@@ -313,69 +320,90 @@ async def root():
 
 # ============ AUTH ROUTES ============
 
-@api_router.post("/auth/session")
-async def create_session(request: Request, response: Response):
-    """Exchange session_id from Emergent Auth for user data and create session"""
-    # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+
+@api_router.post("/auth/register")
+async def register(req: RegisterRequest, response: Response):
+    """Register a new user account"""
+    # Check if email already exists
+    existing = await db.users.find_one({"email": req.email}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
     
-    body = await request.json()
-    session_id = body.get("session_id")
-    
-    if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
-    
-    # Call Emergent Auth to get user data
-    async with httpx.AsyncClient() as client:
-        try:
-            auth_response = await client.get(
-                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                headers={"X-Session-ID": session_id}
-            )
-            auth_response.raise_for_status()
-            user_data = auth_response.json()
-        except Exception as e:
-            logger.error(f"Failed to exchange session_id: {e}")
-            raise HTTPException(status_code=401, detail="Invalid session_id")
-    
-    # Check if user exists, create if not
-    user_doc = await db.users.find_one({"email": user_data["email"]}, {"_id": 0})
-    
-    if not user_doc:
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        user_doc = {
-            "user_id": user_id,
-            "email": user_data["email"],
-            "name": user_data["name"],
-            "picture": user_data.get("picture"),
-            "role": "member",
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-        await db.users.insert_one(user_doc)
-    
-    # Create session
-    session_token = user_data["session_token"]
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    
-    session_doc = {
-        "session_token": session_token,
-        "user_id": user_doc["user_id"],
-        "expires_at": expires_at.isoformat(),
+    # Create user
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    user_doc = {
+        "user_id": user_id,
+        "email": req.email,
+        "name": req.name,
+        "password_hash": hash_password(req.password),
+        "picture": None,
+        "role": "member",  # Default role
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.user_sessions.insert_one(session_doc)
+    await db.users.insert_one(user_doc)
+    
+    # Create JWT token
+    token = create_jwt_token(user_id, req.email, "member")
     
     # Set cookie
     response.set_cookie(
-        key="session_token",
-        value=session_token,
+        key="auth_token",
+        value=token,
         httponly=True,
         secure=True,
         samesite="none",
         path="/",
-        max_age=7*24*60*60
+        max_age=JWT_EXPIRY_HOURS * 3600
     )
     
-    return {"user": User(**user_doc).model_dump()}
+    # Return user (without password_hash)
+    user_doc.pop("password_hash", None)
+    return {"user": User(**user_doc).model_dump(), "token": token}
+
+@api_router.post("/auth/login")
+async def login(req: LoginRequest, response: Response):
+    """Login with email and password"""
+    # Find user
+    user_doc = await db.users.find_one({"email": req.email})
+    if not user_doc:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Verify password
+    if not user_doc.get("password_hash") or not verify_password(req.password, user_doc["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Create JWT token
+    token = create_jwt_token(user_doc["user_id"], req.email, user_doc["role"])
+    
+    # Set cookie
+    response.set_cookie(
+        key="auth_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=JWT_EXPIRY_HOURS * 3600
+    )
+    
+    # Return user (without password_hash and _id)
+    user_doc.pop("password_hash", None)
+    user_doc.pop("_id", None)
+    return {"user": User(**user_doc).model_dump(), "token": token}
+
+@api_router.post("/auth/logout")
+async def logout(response: Response):
+    """Logout - clear auth cookie"""
+    response.delete_cookie(key="auth_token", path="/")
+    return {"message": "Logged out"}
 
 @api_router.get("/auth/me")
 async def get_me(user: User = Depends(get_current_user)):
