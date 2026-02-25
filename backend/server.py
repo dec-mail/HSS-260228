@@ -1019,6 +1019,45 @@ async def list_members(user: User = Depends(get_current_user)):
         logger.error(f"Error fetching members: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch members")
 
+@api_router.get("/members/{user_id}")
+async def get_member_profile(user_id: str, user: User = Depends(get_current_user)):
+    """Get a member's profile with application details"""
+    member = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    member.pop("password_hash", None)
+    
+    # Get application details for richer profile
+    app_doc = None
+    if member.get("application_id"):
+        app_doc = await db.applications.find_one({"application_id": member["application_id"]}, {"_id": 0})
+    elif member.get("email"):
+        app_doc = await db.applications.find_one({"email": member["email"], "status": "approved"}, {"_id": 0})
+    
+    profile = {
+        "user_id": member["user_id"],
+        "name": member.get("name", "Member"),
+        "picture": member.get("picture"),
+        "role": member.get("role"),
+        "created_at": member.get("created_at"),
+    }
+    
+    if app_doc:
+        profile["location"] = f"{app_doc.get('city', '')}, {app_doc.get('state', '')}"
+        profile["interests"] = app_doc.get("interests", "")
+        profile["daily_routine"] = app_doc.get("daily_routine", "")
+        profile["housing_type"] = app_doc.get("shared_housing_type", "")
+        profile["mobility_level"] = app_doc.get("mobility_level", "")
+        profile["is_smoker"] = app_doc.get("is_smoker", False)
+        profile["has_pets"] = app_doc.get("has_pets", False)
+        profile["dietary_preferences"] = app_doc.get("dietary_preferences", "")
+        profile["preferred_location"] = app_doc.get("preferred_location", "")
+        profile["preferred_age_range"] = app_doc.get("preferred_age_range", "")
+        profile["weekly_budget"] = app_doc.get("weekly_budget")
+    
+    return profile
+
 # ============ SHORTLIST ROUTES ============
 
 @api_router.post("/shortlists")
