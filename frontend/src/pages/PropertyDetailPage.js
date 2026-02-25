@@ -126,30 +126,41 @@ const PropertyDetailPage = () => {
               <div className="highlight-item">
                 <span className="highlight-icon">🛏</span>
                 <div className="highlight-text">
-                  <strong>{property.available_bedrooms}</strong>
+                  <strong>{property.available_bedrooms || '-'}</strong>
                   <span>bedrooms available</span>
                 </div>
               </div>
               <div className="highlight-item">
                 <span className="highlight-icon">🏠</span>
                 <div className="highlight-text">
-                  <strong>{property.total_bedrooms}</strong>
+                  <strong>{property.total_bedrooms || '-'}</strong>
                   <span>total bedrooms</span>
                 </div>
               </div>
               <div className="highlight-item">
                 <span className="highlight-icon">🚿</span>
                 <div className="highlight-text">
-                  <strong>{property.total_bathrooms}</strong>
+                  <strong>{property.total_bathrooms || '-'}</strong>
                   <span>bathrooms</span>
                 </div>
               </div>
             </div>
 
             {currentUser && (
-              <button className="btn btn-primary btn-large contact-btn" data-testid="contact-btn">
-                Express Interest
-              </button>
+              <div className="property-actions">
+                <button className="btn btn-primary btn-large contact-btn" data-testid="contact-btn">
+                  Express Interest
+                </button>
+                {(currentUser.user_id === property.added_by_user_id || currentUser.role === 'admin') && (
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={() => navigate(`/properties/${propertyId}/edit`)}
+                    data-testid="edit-property-btn"
+                  >
+                    Edit Property
+                  </button>
+                )}
+              </div>
             )}
             {!currentUser && (
               <p className="login-prompt">
