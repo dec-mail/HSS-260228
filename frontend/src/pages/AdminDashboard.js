@@ -278,20 +278,47 @@ const AdminDashboard = () => {
                   <option value="rejected">Rejected</option>
                 </select>
               </div>
+              {/* Bulk Actions */}
+              {selectedApps.length > 0 && (
+                <div style={{ padding: '8px 12px', background: '#eff6ff', borderBottom: '1px solid #dbeafe', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#1e40af' }}>{selectedApps.length} selected</span>
+                  <button className="btn btn-sm btn-success" onClick={() => bulkAction('approved')} disabled={bulkLoading} data-testid="bulk-approve-btn">
+                    {bulkLoading ? '...' : 'Approve All'}
+                  </button>
+                  <button className="btn btn-sm btn-danger" onClick={() => bulkAction('rejected')} disabled={bulkLoading} data-testid="bulk-reject-btn">
+                    {bulkLoading ? '...' : 'Reject All'}
+                  </button>
+                  <button className="btn btn-sm" onClick={() => setSelectedApps([])} style={{ fontSize: '12px' }}>Clear</button>
+                </div>
+              )}
               {loading ? (
                 <div className="loading">Loading...</div>
               ) : applications.length === 0 ? (
                 <p className="no-applications">No applications found</p>
               ) : (
                 <div className="applications-list">
-                  {applications.map((app) => (
-                    <div key={app.application_id} className={`application-item ${selectedApp?.application_id === app.application_id ? 'active' : ''}`} onClick={() => viewApplication(app)}>
-                      <div className="app-item-header">
-                        <h3>{app.given_name || app.first_name} {app.family_name || app.last_name}</h3>
-                        <span className={`status-badge status-${app.status}`}>{app.status}</span>
+                  <div style={{ padding: '6px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input type="checkbox" checked={selectedApps.length === filteredApplications().length && filteredApplications().length > 0} onChange={toggleSelectAll} data-testid="select-all-apps" />
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>Select all</span>
+                  </div>
+                  {filteredApplications().map((app) => (
+                    <div key={app.application_id} className={`application-item ${selectedApp?.application_id === app.application_id ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedApps.includes(app.application_id)}
+                        onChange={() => toggleSelectApp(app.application_id)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ marginTop: '4px', flexShrink: 0 }}
+                        data-testid={`select-app-${app.application_id}`}
+                      />
+                      <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => viewApplication(app)}>
+                        <div className="app-item-header">
+                          <h3>{app.given_name || app.first_name} {app.family_name || app.last_name}</h3>
+                          <span className={`status-badge status-${app.status}`}>{app.status}</span>
+                        </div>
+                        <p className="app-item-email">{app.email}</p>
+                        <p className="app-item-date">{new Date(app.created_at).toLocaleDateString()}</p>
                       </div>
-                      <p className="app-item-email">{app.email}</p>
-                      <p className="app-item-date">{new Date(app.created_at).toLocaleDateString()}</p>
                     </div>
                   ))}
                 </div>
