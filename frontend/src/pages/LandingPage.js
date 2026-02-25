@@ -87,6 +87,49 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Property Carousel */}
+      {properties.length > 0 && (
+        <section className="property-carousel-section" data-testid="property-carousel">
+          <div className="container">
+            <h2 className="section-title">Available Properties</h2>
+            <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '32px' }}>Browse our current shared housing options</p>
+            <div className="carousel-wrapper">
+              <button className="carousel-arrow carousel-prev" onClick={prevSlide} data-testid="carousel-prev">&lsaquo;</button>
+              <div className="carousel-track-wrapper">
+                <div className="carousel-track" style={{ transform: `translateX(-${carouselIndex * (100 / visibleCount)}%)` }}>
+                  {properties.map((prop) => (
+                    <div key={prop.property_id} className="carousel-card" onClick={() => navigate(`/properties/${prop.property_id}`)} data-testid={`carousel-card-${prop.property_id}`}>
+                      <div className="carousel-card-image">
+                        {prop.images && prop.images.length > 0 ? (
+                          <img src={prop.images[0]} alt={prop.city} />
+                        ) : (
+                          <div className="carousel-placeholder">No Image</div>
+                        )}
+                      </div>
+                      <div className="carousel-card-info">
+                        <h3>{prop.address || `${prop.city}, ${prop.state}`}</h3>
+                        <p className="carousel-location">{prop.city}, {prop.state} {prop.postcode || ''}</p>
+                        <div className="carousel-price">${prop.weekly_rent_per_person}<span>/week pp</span></div>
+                        <div className="carousel-meta">
+                          {prop.available_bedrooms && <span>{prop.available_bedrooms} bed{prop.available_bedrooms > 1 ? 's' : ''} avail</span>}
+                          {prop.property_type && <span>{prop.property_type}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button className="carousel-arrow carousel-next" onClick={nextSlide} data-testid="carousel-next">&rsaquo;</button>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              <button className="btn btn-primary" onClick={() => navigate('/properties')} data-testid="view-all-properties-btn">
+                View All Properties
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* How It Works */}
       <section className="how-it-works">
         <div className="container">
