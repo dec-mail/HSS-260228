@@ -141,10 +141,43 @@ const MemberDashboard = () => {
   const handleLogout = async () => {
     try {
       await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
+      localStorage.removeItem('auth_token');
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
+      localStorage.removeItem('auth_token');
       navigate('/');
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordMessage(null);
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const config = { withCredentials: true, headers: token ? { Authorization: `Bearer ${token}` } : {} };
+      const response = await axios.post(`${API}/auth/change-password`, {
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword
+      }, config);
+      setPasswordMessage(response.data.message);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      setPasswordError(error.response?.data?.detail || 'Failed to change password');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
