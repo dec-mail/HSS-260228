@@ -222,6 +222,9 @@ const AdminDashboard = () => {
           <button className={`admin-tab ${activeTab === 'members' ? 'active' : ''}`} onClick={() => setActiveTab('members')}>
             Members
           </button>
+          <button className={`admin-tab ${activeTab === 'inquiries' ? 'active' : ''}`} onClick={() => setActiveTab('inquiries')}>
+            Inquiries {stats.interests > 0 && <span style={{ background: '#ef4444', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '12px', marginLeft: '6px' }}>{stats.interests}</span>}
+          </button>
         </div>
 
         {/* Applications Tab */}
