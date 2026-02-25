@@ -333,24 +333,45 @@ class RegisterRequest(BaseModel):
 
 @api_router.post("/auth/register")
 async def register(req: RegisterRequest, response: Response):
-    """Register a new user account"""
-    # Check if email already exists
-    existing = await db.users.find_one({"email": req.email}, {"_id": 0})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    """Register a new user account - only for approved applicants"""
+    # Check if there's an approved application for this email
+    approved_app = await db.applications.find_one({"email": req.email, "status": "approved"}, {"_id": 0})
+    if not approved_app:
+        raise HTTPException(status_code=400, detail="Registration requires an approved application. Please submit an application first and wait for approval.")
     
-    # Create user
-    user_id = f"user_{uuid.uuid4().hex[:12]}"
-    user_doc = {
-        "user_id": user_id,
-        "email": req.email,
-        "name": req.name,
-        "password_hash": hash_password(req.password),
-        "picture": None,
-        "role": "member",  # Default role
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.users.insert_one(user_doc)
+    # Check if user already exists with a password (already registered)
+    existing = await db.users.find_one({"email": req.email}, {"_id": 0})
+    if existing and existing.get("password_hash"):
+        raise HTTPException(status_code=400, detail="An account with this email already exists. Please login instead.")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    if existing:
+        # User doc was created during approval but has no password - update it
+        await db.users.update_one(
+            {"email": req.email},
+            {"$set": {
+                "password_hash": hash_password(req.password),
+                "name": req.name,
+                "application_id": approved_app.get("application_id")
+            }}
+        )
+        user_id = existing["user_id"]
+        user_doc = {**existing, "name": req.name, "application_id": approved_app.get("application_id")}
+    else:
+        # No user doc exists yet - create one
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        user_doc = {
+            "user_id": user_id,
+            "email": req.email,
+            "name": req.name,
+            "password_hash": hash_password(req.password),
+            "picture": None,
+            "role": "member",
+            "application_id": approved_app.get("application_id"),
+            "created_at": now
+        }
+        await db.users.insert_one(user_doc)
     
     # Create JWT token
     token = create_jwt_token(user_id, req.email, "member")
@@ -366,8 +387,12 @@ async def register(req: RegisterRequest, response: Response):
         max_age=JWT_EXPIRY_HOURS * 3600
     )
     
-    # Return user (without password_hash)
+    # Send welcome email
+    await send_registration_welcome_email(req.email, req.name)
+    
+    # Return user (without password_hash and _id)
     user_doc.pop("password_hash", None)
+    user_doc.pop("_id", None)
     return {"user": User(**user_doc).model_dump(), "token": token}
 
 @api_router.post("/auth/login")
