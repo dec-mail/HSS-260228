@@ -57,8 +57,10 @@
 - [x] **Member Search/Filter** functionality in Member Dashboard
 
 ### Mocked/Placeholder
-- Email notifications (logged to console)
 - Property image uploads (using placeholder URLs)
+
+### Real Integrations
+- Resend email service for all transactional emails
 
 ## API Endpoints
 
