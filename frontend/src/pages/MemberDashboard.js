@@ -596,6 +596,161 @@ const MemberDashboard = () => {
             )}
           </div>
         )}
+        {/* Groups Tab */}
+        {activeTab === 'groups' && (
+          <div className="groups-section" data-testid="groups-section">
+            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2>Groups</h2>
+                <p>Find and join groups of compatible housemates</p>
+              </div>
+              <button className="btn btn-primary" onClick={() => setShowCreateGroup(true)} data-testid="create-group-btn">
+                Create Group
+              </button>
+            </div>
+
+            {showCreateGroup && (
+              <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>Create New Group</h3>
+                <form onSubmit={createGroup}>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px' }}>Group Name *</label>
+                    <input type="text" value={groupForm.name} onChange={(e) => setGroupForm({...groupForm, name: e.target.value})} required style={{ width: '100%', padding: '10px', border: '2px solid #e5e7eb', borderRadius: '8px', boxSizing: 'border-box' }} data-testid="group-name-input" />
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px' }}>Description</label>
+                    <textarea value={groupForm.description} onChange={(e) => setGroupForm({...groupForm, description: e.target.value})} rows={3} style={{ width: '100%', padding: '10px', border: '2px solid #e5e7eb', borderRadius: '8px', resize: 'vertical', boxSizing: 'border-box' }} data-testid="group-desc-input" />
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px' }}>Housing Preference</label>
+                    <input type="text" value={groupForm.housing_preference} onChange={(e) => setGroupForm({...groupForm, housing_preference: e.target.value})} placeholder="e.g. Sunny Coast, QLD" style={{ width: '100%', padding: '10px', border: '2px solid #e5e7eb', borderRadius: '8px', boxSizing: 'border-box' }} data-testid="group-pref-input" />
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button type="submit" className="btn btn-primary" data-testid="group-create-submit">Create</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowCreateGroup(false)}>Cancel</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {groups.length === 0 ? (
+              <div className="empty-shortlist"><p>No groups yet. Create one to get started!</p></div>
+            ) : (
+              <div className="members-grid">
+                {groups.map(group => {
+                  const isMember = group.members?.some(m => m.user_id === currentUser?.user_id);
+                  const isCreator = group.created_by === currentUser?.user_id;
+                  return (
+                    <div key={group.group_id} className="member-card" data-testid={`group-card-${group.group_id}`}>
+                      <div className="member-info">
+                        <h3>{group.name}</h3>
+                        {group.description && <p style={{ color: '#6b7280', fontSize: '14px', margin: '4px 0' }}>{group.description}</p>}
+                        {group.housing_preference && <p style={{ color: '#2563eb', fontSize: '13px', margin: '2px 0' }}>Preference: {group.housing_preference}</p>}
+                        <p style={{ fontSize: '13px', color: '#9ca3af', margin: '4px 0' }}>
+                          {group.members?.length || 0} member{(group.members?.length || 0) !== 1 ? 's' : ''} &middot; Created by {group.creator_name}
+                        </p>
+                      </div>
+                      <div className="member-actions">
+                        {isMember ? (
+                          <>
+                            <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Joined</span>
+                            {!isCreator && <button className="btn btn-sm btn-danger" onClick={() => leaveGroup(group.group_id)} data-testid={`leave-group-${group.group_id}`}>Leave</button>}
+                          </>
+                        ) : (
+                          <button className="btn btn-sm btn-primary" onClick={() => joinGroup(group.group_id)} data-testid={`join-group-${group.group_id}`}>Join</button>
+                        )}
+                        {isCreator && <button className="btn btn-sm btn-danger" onClick={() => deleteGroup(group.group_id)} data-testid={`delete-group-${group.group_id}`} style={{ marginTop: '4px' }}>Delete</button>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Messages Tab */}
+        {activeTab === 'messages' && (
+          <div className="messages-section" data-testid="messages-section" style={{ display: 'flex', gap: '20px', minHeight: '500px' }}>
+            {/* Conversations List */}
+            <div style={{ width: '280px', flexShrink: 0, background: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb', fontWeight: '700', color: '#1a2332' }}>
+                Conversations
+              </div>
+              {conversations.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>
+                  No messages yet.<br/>Click "Message" on a member to start.
+                </div>
+              ) : (
+                conversations.map(conv => {
+                  const msg = conv.last_message;
+                  const otherName = msg.from_user_id === currentUser?.user_id ? msg.to_name : msg.from_name;
+                  return (
+                    <div
+                      key={conv.conversation_id}
+                      onClick={() => openConversation(conv.conversation_id)}
+                      style={{
+                        padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #f3f4f6',
+                        background: activeConversation === conv.conversation_id ? '#eff6ff' : 'white'
+                      }}
+                      data-testid={`conv-${conv.conversation_id}`}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <strong style={{ fontSize: '14px' }}>{otherName}</strong>
+                        {conv.unread_count > 0 && <span style={{ background: '#ef4444', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '11px' }}>{conv.unread_count}</span>}
+                      </div>
+                      <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {msg.content}
+                      </p>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Chat Area */}
+            <div style={{ flex: 1, background: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column' }}>
+              {activeConversation || messageRecipient ? (
+                <>
+                  <div style={{ flex: 1, padding: '16px', overflowY: 'auto', maxHeight: '400px' }}>
+                    {conversationMessages.length === 0 ? (
+                      <div style={{ textAlign: 'center', color: '#9ca3af', padding: '40px' }}>Start the conversation!</div>
+                    ) : (
+                      conversationMessages.map(msg => (
+                        <div key={msg.message_id} style={{ marginBottom: '12px', display: 'flex', justifyContent: msg.from_user_id === currentUser?.user_id ? 'flex-end' : 'flex-start' }}>
+                          <div style={{
+                            maxWidth: '70%', padding: '10px 14px', borderRadius: '12px',
+                            background: msg.from_user_id === currentUser?.user_id ? '#2563eb' : '#f3f4f6',
+                            color: msg.from_user_id === currentUser?.user_id ? 'white' : '#1a2332'
+                          }} data-testid={`msg-${msg.message_id}`}>
+                            <p style={{ margin: 0, fontSize: '14px' }}>{msg.content}</p>
+                            <p style={{ margin: '4px 0 0', fontSize: '10px', opacity: 0.7 }}>{new Date(msg.created_at).toLocaleTimeString()}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <form onSubmit={sendMessage} style={{ display: 'flex', gap: '8px', padding: '12px', borderTop: '1px solid #e5e7eb' }}>
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type a message..."
+                      style={{ flex: 1, padding: '10px 14px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                      data-testid="message-input"
+                    />
+                    <button type="submit" className="btn btn-primary" style={{ padding: '10px 20px' }} data-testid="send-message-btn">Send</button>
+                  </form>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#9ca3af' }}>
+                  Select a conversation or message a member to start chatting
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Favorites Tab */}
         {activeTab === 'favorites' && (
           <div className="favorites-section" data-testid="favorites-section">
