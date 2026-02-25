@@ -16,6 +16,8 @@ import random
 import string
 import aiofiles
 import shutil
+import bcrypt
+import jwt
 
 # Import email service
 from email_service import (
@@ -29,6 +31,11 @@ from email_service import (
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# JWT Config
+JWT_SECRET = os.environ.get('JWT_SECRET', 'hss-secret-key-change-in-production-2024')
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRY_HOURS = 24 * 7  # 7 days
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
