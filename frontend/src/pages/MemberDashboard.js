@@ -28,11 +28,15 @@ const MemberDashboard = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
+  
+  // Favorites state
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     fetchCurrentUser();
     fetchMembers();
     fetchShortlists();
+    fetchFavorites();
   }, []);
 
   useEffect(() => {
