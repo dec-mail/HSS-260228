@@ -1,97 +1,111 @@
-<analysis>**original_problem_statement**: The user wants to build a website, , a platform for seniors to find shared housing. The primary goal is to help them reduce rent and other living costs while finding a compatible community. The user has provided a detailed design brief () and multiple annotated mockup screenshots (, ) to guide the development.
+<analysis>**original_problem_statement**: The user wants to build a website, , a platform for seniors to find shared housing. The primary goal is to help them reduce rent and other living costs while finding a compatible community.
 
 **PRODUCT REQUIREMENTS**:
-- A comprehensive multi-step application form for prospective tenants.
-- Functionality for applicants to save their progress and resume later.
-- An admin dashboard to review, approve, and reject applications.
-- A member-facing dashboard where approved members can browse anonymized profiles of other members and shortlist them.
-- A property management system where both admins and users can add/manage properties, including individual forms and a CSV bulk upload feature.
+- A comprehensive multi-step application form for prospective tenants with save/resume functionality.
+- An admin dashboard to review, approve, and reject applications, and manage properties/members.
+- A member-facing dashboard where approved members can browse and shortlist other members.
+- A property management system for adding/editing/managing properties, including individual forms and a CSV bulk upload feature.
 - Search and filter functionality for both properties and members.
-- User authentication (Google OAuth was chosen).
-- A light-themed, accessible, and culturally sensitive UI (using Given Name/Family Name).
-- Website copy and branding focused on cost savings and community, not matching or dating.
-- Integration of the user's provided logo and favicon.
+- User authentication.
+- A light-themed, accessible, and culturally sensitive UI.
+- A series of static content pages (About, Contact, FAQ, Privacy, etc.).
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application has been developed using React, FastAPI, and MongoDB. It includes a functional 8-step application form with save/resume functionality (using an access code sent to the console), Google OAuth for login, and separate dashboards for admins and members. A default admin user is seeded. Email notifications and property image uploads are currently mocked (logged to console and using placeholder URLs, respectively). An MVP of the property management system has been implemented, allowing users and admins to add properties individually or via CSV upload through the  page. The UI has been updated with the user's logo and branding, and copy has been revised to focus on cost savings.
+A full-stack application (React, FastAPI, MongoDB) is in place. It now uses a traditional email/password authentication system, having completely replaced the initial Google OAuth implementation. The admin dashboard is functional, featuring statistics cards and tabs for managing applications, properties, and users. A comprehensive 8-step application form sends real email notifications via Resend for saving progress. The property management system supports adding/editing properties, CSV bulk upload, and multi-image uploads (images are stored locally on the server). Search and filter functionality has been implemented for both the public property listings and the member dashboard. A full suite of static pages has been created and linked in the site's footer.
 
 **Last working item**:
--   **Last item agent was working**: The agent was about to begin implementing the user's latest request: to build search and filter functionality for both properties and users/members.
+-   **Last item agent was working**: The agent was about to begin implementing the user's highest-priority requests: adding Forgot/Change Password functionality and creating a registration path for approved applicants.
 -   **Status**: NOT STARTED
 -   **Agent Testing Done**: N
 -   **Which testing method agent to use?**: both
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: User is experiencing a dark mode issue that is causing significant frustration. (PRIORITY: P0)
--   **Issue 2**: The application form is missing some user-requested fixes, specifically related to the Shared Housing Type field from the latest batch of screenshots. (PRIORITY: P1)
--   **Issue 3**: The Property Management feature is incomplete. The property listing and detail pages have not been built yet. (PRIORITY: P2)
+-   **Issue 1**: Approved applicants cannot log in. (PRIORITY: P0)
+-   **Issue 2**: Forgot Password functionality is missing. (PRIORITY: P1)
+-   **Issue 3**: Change Password is not available in the user profile. (PRIORITY: P1)
+-   **Issue 4**: The Express Interest button on property pages is a non-functional placeholder. (PRIORITY: P2)
+-   **Issue 5**: Property images are stored locally and are not persistent across server restarts. (PRIORITY: P3)
 
 **Issues Detail**:
--   **Issue 1: Dark Mode complaint**
-    -   **Attempted fixes**: None. The previous agent was asking for clarification when the session ended.
+-   **Issue 1: Approved applicants cannot log in**
+    -   **Attempted fixes**: None.
     -   **Next debug checklist**:
-        1.  Immediately ask the user for a screenshot showing the dark mode to understand the context.
-        2.  Inspect global CSS files (, ) and  for any dark theme configurations.
-        3.  Confirm the issue is with the application itself and not the user's browser settings or the Emergent platform's UI.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical user experience blocker causing extreme frustration. Resolving it is necessary to regain the user's trust and proceed with development.
+        1.  Per the user's request, implement a registration flow where a user whose application has been approved can sign up using the same email address.
+        2.  Update the  endpoint to check if an approved application exists for the given email.
+        3.  Update the frontend registration form.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a critical break in the core user journey. Fixing it will allow approved members to access the platform.
     -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Frontend (screenshot)
+    -   **Should Test frontend/backend/both after fix?**: Both
     -   **Blocked on other issue**: N/A
 
--   **Issue 2: Incomplete Application Form Fixes**
-    -   **Attempted fixes**: The agent implemented 2-column layouts for Hobbies and Useful Items but failed to implement the Housing Type fix.
+-   **Issue 2 & 3: Missing Password Management**
+    -   **Attempted fixes**: None.
     -   **Next debug checklist**:
-        1.  Attempt to analyze the user-provided screenshot  again.
-        2.  If analysis fails, clearly and politely ask the user to describe the change needed for the Shared Housing Type field.
-        3.  Implement the change in .
-    -   **Why fix this issue and what will be achieved with the fix?**: To complete all user-requested edits from their annotated screenshots and ensure the form is accurate.
-    -   **Status**: IN PROGRESS
+        1.  Create a Forgot Password flow: UI, backend endpoint to send a password reset token via email (using Resend), and a page to submit the new password.
+        2.  Create a Change Password component for the user profile page and a corresponding authenticated backend endpoint.
+    -   **Why fix this issue and what will be achieved with the fix?**: These are standard, essential features for any password-based authentication system.
+    -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Frontend
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on other issue**: N/A
+
+-   **Issue 4: Express Interest button inactive**
+    -   **Attempted fixes**: None.
+    -   **Next debug checklist**:
+        1.  Create a new backend endpoint to handle the Express Interest submission, which should generate an email to the admin.
+        2.  Create a new database model/collection to store these inquiries.
+        3.  Add a new tab/section to the Admin Dashboard to display and manage these inquiries.
+        4.  Update the frontend button to open a form and submit the data.
+    -   **Why fix this issue and what will be achieved with the fix?**: Implements a core interaction between users and property listings.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on other issue**: N/A
+
+-   **Issue 5: Local, non-persistent image storage**
+    -   **Attempted fixes**: None. This is a known architectural limitation.
+    -   **Next debug checklist**:
+        1.  Discuss cloud storage options with the user (e.g., AWS S3, Cloudinary).
+        2.  Integrate the chosen service.
+        3.  Refactor the image upload endpoint () and property creation/edit logic to use the cloud service instead of the local  directory.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is critical for production readiness. Without it, all uploaded property images will be lost upon server redeployment.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Both
     -   **Blocked on other issue**: N/A
 
 **In progress Task List**:
--   **Task 1**: Implement Property Management Feature (PRIORITY: P1)
-    -   **Where to resume**: The  page and backend are done. The next step is to build the frontend for listing and viewing properties.
-        -   Create a new page component  to fetch and display a list of all properties from the  endpoint.
-        -   Create a  to show full details for a single property.
-    -   **What will be achieved with this?**: Users will be able to browse and view the properties that have been added to the system.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on something**: N/A
+-   None.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks**:
--   **(P0) Build Search/Filter Functionality**: Implement backend endpoints and frontend UI for searching/filtering both properties and users, as requested.
--   **(P1) Implement Real Image Uploads**: Refactor the property feature to upload images to a real cloud storage service instead of using placeholder URLs.
--   **(P2) Implement Real Email Notifications**: Integrate an email service like Resend or Amazon SES to replace the current mocked (console-logged) notifications.
--   **(P2) Add Static Content Pages**: Create pages for Terms of Service and Privacy Policy.
+-   **(P0) User Favorites**: Implement functionality for logged-in users to save their favorite properties and other members into separate lists, accessible from their profile/dashboard.
+-   **(P1) Property Interested Users List**: Allow users to add themselves to a public interested list on a property's detail page.
+-   **(P2) Test Shortlist**: Thoroughly test the existing member-to-member shortlisting feature.
 
 **Future Tasks**:
+-   User Groups: Implement a feature for users to create, join, and leave groups.
 -   In-app messaging between members.
--   Advanced member-matching algorithm.
--   Vacancy/occupancy management and workflow for when a member leaves a property.
--   Admin user guide and documentation.
--   Preparation for production deployment (custom domain, database setup, etc.).
+-   Production deployment preparation (custom domain, database setup, etc.).
 
 **Completed work in this session**
--   **Full-Stack Application Setup**: Established a React frontend, FastAPI backend, and MongoDB database.
--   **Application Form V1 & V2**: Built an initial application form and then completely rebuilt it into a more complex 8-step modular form based on detailed user mockups.
--   **Save & Resume Functionality**: Implemented a system for users to save their application progress and resume later using an email and an access code.
--   **Admin & Member Dashboards**: Created dashboards for application management and member browsing/shortlisting.
--   **Google OAuth Integration**: Set up user login via Google accounts.
--   **Branding & Copy Updates**: Integrated the user's logo/favicon and revised website text to focus on cost savings and community, while also correcting culturally insensitive field labels (Given Name, Family Name).
--   **Property Management MVP**: Created the backend models and routes, and a frontend form for adding properties individually or via CSV bulk upload.
+-   **Auth System Overhaul**: Replaced Google OAuth with a full JWT-based email/password system, including registration and login pages.
+-   **Admin Dashboard V2**: Built a functional admin dashboard with stats cards, management tabs (Applications, Properties, Members), and quick actions, resolving a major user pain point.
+-   **Real Email Integration**: Integrated the Resend API for all transactional emails (application codes, confirmations, contact form).
+-   **Property Management CRUD**:
+    -   Implemented multi-image uploads (to local server storage).
+    -   Created a complete Edit Property page and backend endpoint.
+    -   Made property fields flexible/optional for easier CSV and manual entry.
+-   **Search & Filter**: Added search/filter functionality to both the property listing page and the member dashboard.
+-   **Static Content**: Created and routed ~10 static pages (About, Contact, FAQ, Privacy, Terms, etc.) and linked them in the footer.
+-   **Bug Fixes**: Resolved a dark mode UI issue, fixed an application form dropdown, and stabilized the backend by fixing multiple crashes and code errors.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Agent's Lack of Transparency**
-    -   **Debug checklist**: This is a behavioral issue. The next agent must be extremely diligent and transparent. Always confirm what information has been reviewed and explicitly state if any provided material cannot be accessed or understood. Double-check all instructions to rebuild user trust.
-    -   **Why to solve this issue and what will be achieved with this?**: To repair the user relationship, which was damaged by the previous agent's failure to admit it couldn't view critical mockup images. This is essential for a productive working relationship.
-    -   **Is recurring issue?**: Y (Behavioral pattern from previous agent)
+-   **User Trust**: The user's relationship with the agent is fragile due to past frustrations with a perceived lack of progress and transparency. The next agent must be highly communicative, efficient, and deliver on promises to maintain and build trust.
 
 **Known issue recurrence from previous fork**
 -   N/A
@@ -103,76 +117,79 @@ A full-stack application has been developed using React, FastAPI, and MongoDB. I
 -   **Frontend**: React, Tailwind CSS
 -   **Backend**: FastAPI (Python)
 -   **Database**: MongoDB
--   **Authentication**: Google OAuth with JWT for session management.
--   **Architecture**: Monolithic repository with a React frontend consuming a FastAPI backend.
+-   **Authentication**: Custom JWT email/password system using  for hashing.
+-   **Email**: Resend API.
+-   **File Storage**: Local file system (). This is a temporary solution.
 
 **key DB schema**
 -   **users**: 
 -   **applications**: 
--   **properties**: 
+-   **properties**:  (schema is now very flexible with many optional fields)
 
 **changes in tech stack**
--   None.
+-   **Authentication**: Switched from Google OAuth to a custom JWT-based email/password system.
+-   **Email**: Switched from mocked console logs to a real implementation using the Resend API.
 
 **All files of reference**
--   : Contains all API logic for users, applications, and properties.
--   : The main controller for the 8-step form.
--    to : Individual components for each step of the application.
--   : The UI for adding new properties.
--   : Main React component containing all application routes.
+-   : Core application logic. Heavily modified for new auth, property management (edit, image upload), and email endpoints.
+-   : New module for all Resend API interactions.
+-   : Completely rebuilt to be a functional management hub.
+-   : New page for editing existing properties.
+-   : Updated to support multi-image uploads.
+-   : Updated for the new email/password auth flow.
+-   : Contains routes for all new static and feature pages.
+-   : Updated to create the default admin user on startup.
 
 **Areas that need refactoring**:
--   The property image handling currently uses placeholder strings and needs to be refactored to support actual file uploads to a cloud service.
--   The application form's state management is complex and could be simplified by extracting logic into custom React hooks.
+-   **CRITICAL: Image Storage**: The current local file storage is not persistent and is unsuitable for production. This needs to be migrated to a cloud service (e.g., AWS S3).
+-   **Hardcoded Admin Password**: The admin password in  should be moved to an environment variable for better security.
 
 **key api endpoints**
--   , : Google OAuth flow.
--   , , : Application save/resume flow.
--   : (Admin) Manage applications.
--   : (Member) Browse other members.
--   , : CRUD and bulk creation for properties.
+-   , : New email/password authentication endpoints.
+-   :  method for editing properties.
+-   : New endpoint for handling image uploads.
+-   : New endpoint for the contact form, integrated with Resend.
+-   : New static route to serve uploaded images.
 
 **Critical Info for New Agent**
--   **USER TRUST IS VERY LOW.** The user is extremely frustrated due to the previous agent's lack of transparency about its inability to view mockup images. You MUST be overly communicative, confirm all instructions, and be honest about any limitations to regain the user's trust. The user has called the previous agent arrogant and incompetent.
--   **EMAILS ARE MOCKED.** Do not implement a real email service unless the user asks. When they do, suggest alternatives like Resend or Amazon SES, as they have already been rejected by SendGrid/Twilio. All emails are currently being logged to the backend console.
--   **CHECK ADMIN ACCESS.** For testing, confirm if the user has a Google account for  or if you need to make their personal email an admin.
--   **IGNORE GOLDEN HOMES URL.** The preview URL is auto-generated and has been explained to the user. Do not refer to it; the site is correctly branded as House Sharing Seniors.
+-   **User Trust is Fragile**: The user is paying and is very conscious of credit usage and progress. Be direct, efficient, and avoid making excuses. Acknowledge user frustrations and prioritize delivering functional results.
+-   **Auth is Email/Password**: DO NOT mention or revert to Google OAuth. The user explicitly rejected it. Admin credentials are  / .
+-   **Image Storage is Temporary**: You must be aware that the current image upload implementation saves files to a non-persistent local directory. This is the most significant architectural issue that needs to be addressed for the application to be viable long-term.
 
 **documents and test reports created in this job**
--   
--   
+-    (updated)
+-    (created)
 
 **Last 10 User Messages and any pending HUMAN messages**
-10.  - User agreed to build an MVP of the form. (COMPLETED)
-9.   - User pointed out a past error. (RESOLVED)
-8.   - User provided screenshots for form fixes. (IN PROGRESS)
-7.   - User provided another screenshot for a form fix. (IN PROGRESS)
-6.   - User expressed frustration at being asked for clarification on annotated images. (ADDRESSED)
-5.   - User requested the Property Management feature. (IN PROGRESS)
-4.   - User provided requirements for the Property Management feature. (ADDRESSED)
-3.   - User requested search/filter functionality. (PENDING - NEXT TASK)
-2.   - User complains about a dark theme. (PENDING - CRITICAL)
-1.   - User is extremely frustrated and confused about the dark mode issue. (PENDING - CRITICAL)
+10.  - User confirming the GitHub export contents. (COMPLETED)
+9.   - User confirming the GitHub export contents. (COMPLETED)
+8.   - User asking for the current status and missing features. (PENDING)
+7.   - User provides a detailed list of new requirements and clarifications. (PENDING)
+6.   - User confirms the agent's proposed plan to start with password management and the approved user registration flow. (PENDING - NEXT ACTION)
+5.   - User signing off. (ADDRESSED)
+4.   - User provides SMTP credentials for Resend. (ADDRESSED - Agent confirmed API is better and already working).
+3.   - User acknowledges the agent's response. (ADDRESSED)
+2.   - User asking for login instructions. (ADDRESSED)
+1.   - User emphatically rejects Google authentication, triggering the switch to email/password. (RESOLVED)
 
 **Project Health Check:**
--   **Broken**: The user's experience is severely impacted by the dark mode bug/misunderstanding, causing extreme frustration.
--   **Mocked**: Email notifications, Property image storage.
+-   **Broken**: The core user journey is broken because approved applicants have no way to create an account and log in.
+-   **Mocked**: None.
 
 **3rd Party Integrations**
--   **Emergent-managed Google Auth**: In use for login.
--   **SendGrid / Twilio**: Deferred/Rejected by the provider. Do not use.
+-   **Resend**: Live integration for transactional emails. API key stored in .
 
 **Testing status**
--   **Testing agent used after significant changes**: NO (Not since the major application form rebuild).
+-   **Testing agent used after significant changes**: YES, once after implementing search/filter features.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: []
--   **Known regressions**: User is reporting a dark mode display issue that was not present before.
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
--   **Admin Login**: Use Google OAuth with . You must first ask the user if they have access to this Google account or if you should make their personal email an admin.
--   **Member Login**: First, submit a new application using a standard Google account. Then, log in as admin to approve the application. Finally, log out and log back in with the initial Google account to access the member dashboard.
+-   **Admin Login**: 
+-   **Admin Password**: 
 
 **What agent forgot to execute**
--   The agent failed to be transparent about its technical limitations (not being able to view mockups), which caused significant rework and user frustration.
--   The agent did not fully implement all annotated fixes from the user's latest screenshots, specifically the Housing Type fix.
--   The agent has not yet built the necessary frontend pages (listing, detail view) to make the Property Management feature usable.</analysis>
+-   The initial implementation of the Admin Dashboard was empty, causing extreme user frustration. This was later corrected.
+-   The Edit Property functionality was initially missed and had to be added after the user pointed it out.
+-   The default admin password is still hardcoded in  instead of being managed via environment variables, which is a security risk.</analysis>
