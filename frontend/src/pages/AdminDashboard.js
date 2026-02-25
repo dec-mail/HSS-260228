@@ -34,8 +34,8 @@ const AdminDashboard = () => {
       const config = { withCredentials: true, headers: { Authorization: `Bearer ${token}` } };
       
       const [appsRes, propsRes, membersRes, interestsRes] = await Promise.all([
-        axios.get(`${API}/applications`, config),
-        axios.get(`${API}/properties`),
+        axios.get(`${API}/applications`, config).catch(() => ({ data: [] })),
+        axios.get(`${API}/properties`).catch(() => ({ data: [] })),
         axios.get(`${API}/members`, config).catch(() => ({ data: [] })),
         axios.get(`${API}/interests`, config).catch(() => ({ data: [] }))
       ]);
