@@ -222,6 +222,13 @@ const MemberDashboard = () => {
           >
             My Shortlist ({shortlists.length})
           </button>
+          <button
+            className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+            data-testid="settings-tab"
+          >
+            Settings
+          </button>
         </div>
 
         {/* Browse Members Tab */}
