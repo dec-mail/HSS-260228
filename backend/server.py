@@ -687,16 +687,6 @@ async def submit_application_final(request: Request):
     return {"application_id": application_id, "message": "Application submitted successfully"}
 
 
-@api_router.post("/auth/logout")
-async def logout(request: Request, response: Response, user: User = Depends(get_current_user)):
-    """Logout and clear session"""
-    session_token = request.cookies.get("session_token")
-    if session_token:
-        await db.user_sessions.delete_one({"session_token": session_token})
-    
-    response.delete_cookie(key="session_token", path="/")
-    return {"message": "Logged out"}
-
 # ============ APPLICATION ROUTES ============
 
 @api_router.post("/applications", response_model=Application)
