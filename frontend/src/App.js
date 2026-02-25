@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import StartApplication from './pages/StartApplication';
 import ResumeApplication from './pages/ResumeApplication';
 import ApplicationFormNew from './pages/ApplicationFormNew';
