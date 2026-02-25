@@ -223,6 +223,65 @@ async def send_contact_form_email(name: str, email: str, phone: str, subject: st
     return await send_email(ADMIN_EMAIL, admin_subject, html_content)
 
 
+async def send_password_reset_email(to_email: str, name: str, reset_link: str) -> dict:
+    """Send password reset email with link"""
+    subject = "Reset Your Password - House Sharing Seniors"
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">House Sharing Seniors</h1>
+        </div>
+        <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <h2 style="color: #1a2332; margin-top: 0;">Password Reset Request</h2>
+            <p>Hi {name},</p>
+            <p>We received a request to reset your password. Click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{reset_link}" style="background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reset Password</a>
+            </div>
+            <p style="color: #6b7280; font-size: 14px;">This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
+            <p style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                Questions? Contact us at info@housesharingseniors.com.au
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    return await send_email(to_email, subject, html_content)
+
+
+async def send_registration_welcome_email(to_email: str, name: str) -> dict:
+    """Send welcome email after approved applicant registers"""
+    subject = "Welcome to House Sharing Seniors!"
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">House Sharing Seniors</h1>
+        </div>
+        <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <h2 style="color: #065f46; margin-top: 0;">Welcome, {name}!</h2>
+            <p>Your account has been created successfully. You can now access all member features:</p>
+            <ul style="color: #4b5563;">
+                <li>Browse and shortlist potential housemates</li>
+                <li>View available properties in your area</li>
+                <li>Express interest in properties</li>
+                <li>Manage your profile and preferences</li>
+            </ul>
+            <p style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                Questions? Contact us at info@housesharingseniors.com.au
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    return await send_email(to_email, subject, html_content)
+
+
 async def send_contact_confirmation_email(to_email: str, name: str) -> dict:
     """Send confirmation to person who submitted contact form"""
     subject = "We've Received Your Message - House Sharing Seniors"
