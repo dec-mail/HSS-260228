@@ -199,7 +199,7 @@ const PropertyDetailPage = () => {
               )}
             </div>
             <h1 className="property-title" data-testid="property-title">
-              {property.address || `${property.city}, ${property.state}`}
+              {property.city}, {property.state}
             </h1>
             <p className="property-location">{property.city}, {property.state} {property.postcode}</p>
 
@@ -348,7 +348,7 @@ const PropertyDetailPage = () => {
               <button onClick={() => setShowInterestModal(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#6b7280' }}>&times;</button>
             </div>
             <p style={{ color: '#6b7280', marginBottom: '20px' }}>
-              Let us know you're interested in <strong>{property.address || `${property.city}, ${property.state}`}</strong>. The admin team will be notified.
+              Let us know you're interested in <strong>{property.city}, {property.state}</strong>. The admin team will be notified.
             </p>
             <form onSubmit={handleExpressInterest}>
               <div style={{ marginBottom: '16px' }}>
