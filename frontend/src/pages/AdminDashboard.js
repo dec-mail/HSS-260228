@@ -12,12 +12,13 @@ const AdminDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [properties, setProperties] = useState([]);
   const [members, setMembers] = useState([]);
+  const [interests, setInterests] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [adminNotes, setAdminNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
-  const [stats, setStats] = useState({ applications: 0, pending: 0, properties: 0, members: 0 });
+  const [stats, setStats] = useState({ applications: 0, pending: 0, properties: 0, members: 0, interests: 0 });
 
   useEffect(() => {
     fetchAllData();
