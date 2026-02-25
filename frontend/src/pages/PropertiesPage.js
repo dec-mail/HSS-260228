@@ -279,13 +279,24 @@ const PropertiesPage = () => {
                           <span className="price">${property.weekly_rent_per_person}</span>
                           <span className="period">/ week per person</span>
                         </div>
-                        <button 
-                          className="btn btn-primary btn-sm"
-                          onClick={() => navigate(`/properties/${property.property_id}`)}
-                          data-testid={`view-property-${property.property_id}`}
-                        >
-                          View Details
-                        </button>
+                        <div className="property-actions">
+                          <button 
+                            className="btn btn-primary btn-sm"
+                            onClick={() => navigate(`/properties/${property.property_id}`)}
+                            data-testid={`view-property-${property.property_id}`}
+                          >
+                            View
+                          </button>
+                          {currentUser && (currentUser.user_id === property.added_by_user_id || currentUser.role === 'admin') && (
+                            <button 
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => navigate(`/properties/${property.property_id}/edit`)}
+                              data-testid={`edit-property-${property.property_id}`}
+                            >
+                              Edit
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
