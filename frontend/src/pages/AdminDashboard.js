@@ -380,6 +380,54 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+
+        {/* Inquiries Tab */}
+        {activeTab === 'inquiries' && (
+          <div className="admin-table-section">
+            <div className="section-header">
+              <h2>Property Inquiries ({interests.length})</h2>
+            </div>
+            {interests.length === 0 ? (
+              <div className="empty-state"><p>No property inquiries yet.</p></div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Property</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {interests.map((interest) => (
+                    <tr key={interest.interest_id}>
+                      <td>{new Date(interest.created_at).toLocaleDateString()}</td>
+                      <td>{interest.user_name}</td>
+                      <td>{interest.user_email}</td>
+                      <td>{interest.property_location}</td>
+                      <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{interest.message || '-'}</td>
+                      <td><span className={`status-badge status-${interest.status === 'new' ? 'pending' : 'approved'}`}>{interest.status}</span></td>
+                      <td>
+                        {interest.status === 'new' && (
+                          <button className="btn btn-sm btn-success" onClick={() => updateInterestStatus(interest.interest_id, 'reviewed')} data-testid={`review-interest-${interest.interest_id}`}>
+                            Mark Reviewed
+                          </button>
+                        )}
+                        <button className="btn btn-sm" onClick={() => navigate(`/properties/${interest.property_id}`)} data-testid={`view-property-${interest.interest_id}`}>
+                          View Property
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
