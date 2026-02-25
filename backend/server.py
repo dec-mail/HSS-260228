@@ -745,10 +745,6 @@ async def list_applications(admin: User = Depends(require_admin), status: Option
 
 # ============ PROPERTY ROUTES ============
 
-# Create uploads directory for property images
-UPLOAD_DIR = Path(__file__).parent / "uploads" / "properties"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
 # Max 20 images per property, max 10MB per image
 MAX_IMAGES_PER_PROPERTY = 20
 MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -756,7 +752,7 @@ ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
 @api_router.post("/upload/images")
 async def upload_images(files: List[UploadFile] = File(...)):
-    """Upload multiple property images (max 20, PNG/JPG only)"""
+    """Upload multiple property images to Cloudinary (max 20, PNG/JPG only)"""
     if len(files) > MAX_IMAGES_PER_PROPERTY:
         raise HTTPException(status_code=400, detail=f"Maximum {MAX_IMAGES_PER_PROPERTY} images allowed")
     
@@ -764,34 +760,29 @@ async def upload_images(files: List[UploadFile] = File(...)):
     errors = []
     
     for file in files:
-        # Check file extension
         ext = Path(file.filename).suffix.lower()
         if ext not in ALLOWED_EXTENSIONS:
             errors.append(f"{file.filename}: Invalid format. Use JPG, PNG, or WebP")
             continue
         
-        # Check file size
-        file.file.seek(0, 2)  # Seek to end
+        file.file.seek(0, 2)
         size = file.file.tell()
-        file.file.seek(0)  # Reset to start
+        file.file.seek(0)
         
         if size > MAX_IMAGE_SIZE:
             errors.append(f"{file.filename}: File too large (max 10MB)")
             continue
         
         try:
-            # Generate unique filename
-            unique_name = f"{uuid.uuid4().hex}{ext}"
-            file_path = UPLOAD_DIR / unique_name
-            
-            # Save file
-            async with aiofiles.open(file_path, 'wb') as out_file:
-                content = await file.read()
-                await out_file.write(content)
-            
-            # Generate URL (relative path that will be served)
-            uploaded_urls.append(f"/api/uploads/properties/{unique_name}")
-            
+            content = await file.read()
+            import asyncio
+            result = await asyncio.to_thread(
+                cloudinary.uploader.upload,
+                content,
+                folder="hss/properties",
+                resource_type="image"
+            )
+            uploaded_urls.append(result["secure_url"])
         except Exception as e:
             logger.error(f"Failed to upload {file.filename}: {str(e)}")
             errors.append(f"{file.filename}: Upload failed")
@@ -803,27 +794,21 @@ async def upload_images(files: List[UploadFile] = File(...)):
         "errors": errors
     }
 
+# Keep local fallback for existing images
+UPLOAD_DIR = Path(__file__).parent / "uploads" / "properties"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
 @api_router.get("/uploads/properties/{filename}")
 async def get_property_image(filename: str):
-    """Serve uploaded property images"""
+    """Serve locally stored property images (legacy fallback)"""
     file_path = UPLOAD_DIR / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Image not found")
-    
-    # Determine content type
     ext = Path(filename).suffix.lower()
-    content_types = {
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".png": "image/png",
-        ".webp": "image/webp"
-    }
-    content_type = content_types.get(ext, "application/octet-stream")
-    
+    content_types = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
     async with aiofiles.open(file_path, 'rb') as f:
         content = await f.read()
-    
-    return Response(content=content, media_type=content_type)
+    return Response(content=content, media_type=content_types.get(ext, "application/octet-stream"))
 
 @api_router.post("/properties", response_model=Property)
 async def create_property(property_data: PropertyCreate, user: User = Depends(get_current_user)):
