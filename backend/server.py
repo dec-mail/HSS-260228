@@ -1221,6 +1221,165 @@ async def remove_favorite(favorite_id: str, user: User = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Favorite not found")
     return {"message": "Removed from favorites"}
 
+# ============ GROUPS ROUTES ============
+
+class CreateGroupRequest(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    housing_preference: Optional[str] = ""
+
+@api_router.post("/groups")
+async def create_group(req: CreateGroupRequest, user: User = Depends(get_current_user)):
+    """Create a new group"""
+    group_id = f"grp_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    group_doc = {
+        "group_id": group_id,
+        "name": req.name,
+        "description": req.description,
+        "housing_preference": req.housing_preference,
+        "created_by": user.user_id,
+        "creator_name": user.name,
+        "members": [{"user_id": user.user_id, "name": user.name, "joined_at": now}],
+        "created_at": now
+    }
+    await db.groups.insert_one(group_doc)
+    group_doc.pop("_id", None)
+    return group_doc
+
+@api_router.get("/groups")
+async def list_groups(user: User = Depends(get_current_user)):
+    """List all groups"""
+    groups = await db.groups.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return groups
+
+@api_router.get("/groups/{group_id}")
+async def get_group(group_id: str, user: User = Depends(get_current_user)):
+    """Get group details"""
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    return group
+
+@api_router.post("/groups/{group_id}/join")
+async def join_group(group_id: str, user: User = Depends(get_current_user)):
+    """Join a group"""
+    group = await db.groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    if any(m["user_id"] == user.user_id for m in group.get("members", [])):
+        return {"message": "Already a member of this group"}
+    now = datetime.now(timezone.utc).isoformat()
+    await db.groups.update_one(
+        {"group_id": group_id},
+        {"$push": {"members": {"user_id": user.user_id, "name": user.name, "joined_at": now}}}
+    )
+    return {"message": "Joined group successfully"}
+
+@api_router.post("/groups/{group_id}/leave")
+async def leave_group(group_id: str, user: User = Depends(get_current_user)):
+    """Leave a group"""
+    group = await db.groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    await db.groups.update_one(
+        {"group_id": group_id},
+        {"$pull": {"members": {"user_id": user.user_id}}}
+    )
+    return {"message": "Left group"}
+
+@api_router.delete("/groups/{group_id}")
+async def delete_group(group_id: str, user: User = Depends(get_current_user)):
+    """Delete a group (creator or admin only)"""
+    group = await db.groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    if group["created_by"] != user.user_id and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only the group creator or admin can delete this group")
+    await db.groups.delete_one({"group_id": group_id})
+    return {"message": "Group deleted"}
+
+# ============ MESSAGING ROUTES ============
+
+class SendMessageRequest(BaseModel):
+    to_user_id: str
+    content: str
+
+@api_router.post("/messages")
+async def send_message(req: SendMessageRequest, user: User = Depends(get_current_user)):
+    """Send a message to another user"""
+    if req.to_user_id == user.user_id:
+        raise HTTPException(status_code=400, detail="Cannot message yourself")
+    recipient = await db.users.find_one({"user_id": req.to_user_id})
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Recipient not found")
+    
+    # Create conversation_id (sorted so it's the same regardless of direction)
+    pair = sorted([user.user_id, req.to_user_id])
+    conversation_id = f"conv_{pair[0]}_{pair[1]}"
+    
+    now = datetime.now(timezone.utc).isoformat()
+    msg_doc = {
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "conversation_id": conversation_id,
+        "from_user_id": user.user_id,
+        "from_name": user.name,
+        "to_user_id": req.to_user_id,
+        "to_name": recipient.get("name", ""),
+        "content": req.content,
+        "read": False,
+        "created_at": now
+    }
+    await db.messages.insert_one(msg_doc)
+    msg_doc.pop("_id", None)
+    return msg_doc
+
+@api_router.get("/messages/conversations")
+async def get_conversations(user: User = Depends(get_current_user)):
+    """Get list of conversations for current user"""
+    pipeline = [
+        {"$match": {"$or": [{"from_user_id": user.user_id}, {"to_user_id": user.user_id}]}},
+        {"$sort": {"created_at": -1}},
+        {"$group": {
+            "_id": "$conversation_id",
+            "last_message": {"$first": "$$ROOT"},
+            "unread_count": {"$sum": {"$cond": [
+                {"$and": [{"$eq": ["$to_user_id", user.user_id]}, {"$eq": ["$read", False]}]}, 1, 0
+            ]}}
+        }},
+        {"$sort": {"last_message.created_at": -1}},
+        {"$project": {"_id": 0, "conversation_id": "$_id", "last_message": 1, "unread_count": 1}}
+    ]
+    conversations = await db.messages.aggregate(pipeline).to_list(100)
+    # Clean _id from last_message
+    for c in conversations:
+        c["last_message"].pop("_id", None)
+    return conversations
+
+@api_router.get("/messages/{conversation_id}")
+async def get_messages(conversation_id: str, user: User = Depends(get_current_user)):
+    """Get messages in a conversation"""
+    messages = await db.messages.find(
+        {"conversation_id": conversation_id}, {"_id": 0}
+    ).sort("created_at", 1).to_list(500)
+    
+    # Verify user is part of this conversation
+    if messages and messages[0]["from_user_id"] != user.user_id and messages[0]["to_user_id"] != user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Mark messages as read
+    await db.messages.update_many(
+        {"conversation_id": conversation_id, "to_user_id": user.user_id, "read": False},
+        {"$set": {"read": True}}
+    )
+    return messages
+
+@api_router.get("/messages/unread/count")
+async def get_unread_count(user: User = Depends(get_current_user)):
+    """Get total unread message count"""
+    count = await db.messages.count_documents({"to_user_id": user.user_id, "read": False})
+    return {"unread_count": count}
+
 # ============ ADMIN NOTES ROUTES ============
 
 @api_router.post("/admin-notes")
