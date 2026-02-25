@@ -123,6 +123,11 @@ const ContactPage = () => {
               </div>
             ) : (
               <form className="contact-form" onSubmit={handleSubmit}>
+                {error && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #ef4444', borderRadius: '8px', padding: '12px', color: '#b91c1c', marginBottom: '16px' }}>
+                    {error}
+                  </div>
+                )}
                 <div className="form-row">
                   <div className="form-group">
                     <label>Your Name *</label>
@@ -164,12 +169,12 @@ const ContactPage = () => {
                       data-testid="contact-subject"
                     >
                       <option value="">Select a subject...</option>
-                      <option value="application">Application Inquiry</option>
-                      <option value="property">Property Inquiry</option>
-                      <option value="membership">Membership Question</option>
-                      <option value="technical">Technical Support</option>
-                      <option value="feedback">Feedback</option>
-                      <option value="other">Other</option>
+                      <option value="Application Inquiry">Application Inquiry</option>
+                      <option value="Property Inquiry">Property Inquiry</option>
+                      <option value="Membership Question">Membership Question</option>
+                      <option value="Technical Support">Technical Support</option>
+                      <option value="Feedback">Feedback</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
@@ -183,8 +188,8 @@ const ContactPage = () => {
                     data-testid="contact-message"
                   />
                 </div>
-                <button type="submit" className="btn btn-primary" data-testid="contact-submit">
-                  Send Message
+                <button type="submit" className="btn btn-primary" data-testid="contact-submit" disabled={submitting}>
+                  {submitting ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             )}
