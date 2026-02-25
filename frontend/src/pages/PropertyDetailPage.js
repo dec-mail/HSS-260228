@@ -199,14 +199,13 @@ const PropertyDetailPage = () => {
               )}
             </div>
             <h1 className="property-title" data-testid="property-title">
-              {property.city}, {property.state}
+              {property.city}, {property.state} {property.postcode}
             </h1>
-            <p className="property-location">{property.city}, {property.state} {property.postcode}</p>
 
             <div className="price-box">
+              {property.total_bedrooms && <div style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600', marginBottom: '8px' }}>Total rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week ({property.total_bedrooms} bedrooms)</div>}
               <div className="price-amount">${property.weekly_rent_per_person}</div>
               <div className="price-period">weekly rent per bedroom</div>
-              {property.total_bedrooms && <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>Gross rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week ({property.total_bedrooms} bedrooms)</div>}
               <div style={{ marginTop: '12px', padding: '12px', background: '#eff6ff', borderRadius: '8px', fontSize: '14px' }}>
                 <div style={{ fontWeight: '600', color: '#1e40af', marginBottom: '6px' }}>Maximum CRA (Commonwealth Rent Assistance):</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
