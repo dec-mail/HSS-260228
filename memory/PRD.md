@@ -1,204 +1,104 @@
-# House Sharing Seniors - Product Requirements Document
+# House Sharing Seniors - PRD
 
-## Overview
-**Project**: House Sharing Seniors (housesharingseniors.com.au)
-**Purpose**: A platform for Australian Age Pensioners to find shared housing, helping them reduce rent and living costs while finding compatible communities.
+## Original Problem Statement
+Build `housesharingeniors.com.au`, a platform for seniors to find shared housing. The primary goal is to help them reduce rent and other living costs while finding a compatible community.
 
-## Tech Stack
-- **Frontend**: React, Tailwind CSS
+## Core Architecture
+- **Frontend**: React + Tailwind CSS
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
-- **Authentication**: Emergent-managed Google OAuth with JWT session management
+- **Authentication**: Custom JWT email/password (no Google OAuth)
+- **Email**: Resend API
+- **File Storage**: Local file system (`/app/backend/uploads`) - temporary
 
-## Core Features
+## User Personas
+1. **Senior Applicant** - Fills out application form, waits for approval, registers account
+2. **Approved Member** - Browses members, shortlists housemates, views properties
+3. **Admin** - Reviews applications, manages properties/members, approves/rejects
 
-### 1. Application Form (8-Step Modular Form)
-- Step 1: Personal Details (includes Housing Type dropdown)
-- Step 2: Financial Information
-- Step 3: Lifestyle
-- Step 4: Household & Community
-- Step 5: Safety & References
-- Step 6: Preferences
-- Step 7: Useful Items
-- Step 8: Review & Submit
-- **Save & Resume**: Users can save progress with access code
+## What's Been Implemented
 
-### 2. User Dashboards
-- **Admin Dashboard**: Review, approve, reject applications
-- **Member Dashboard**: Browse other members, shortlist, search/filter
+### Authentication System
+- JWT-based email/password auth (login, register)
+- Registration restricted to approved applicants only
+- Forgot Password flow (email with reset link via Resend)
+- Reset Password page (token-based)
+- Change Password in Member Dashboard Settings tab
+- Admin seeded on startup: admin@housesharingseniors.com.au / HSSadmin2024!
 
-### 3. Property Management
-- **Add Property**: Individual form and CSV bulk upload
-- **Properties Page**: Search/filter by city, state, type, bedrooms, rent, amenities
-- **Property Detail Page**: View full property details with image gallery
+### Application System
+- 8-step multi-part application form with save/resume (access codes)
+- Real email notifications via Resend (access codes, confirmations, approvals, rejections)
+- Admin can review, approve, reject applications
 
-### 4. Authentication
-- Google OAuth login via Emergent Auth
-- JWT session management
-- Role-based access (admin/member)
+### Property Management
+- CRUD for properties (add, edit, delete)
+- Multi-image upload (local storage)
+- CSV bulk upload
+- Public property listings with search/filter
+- Property detail pages
 
-## What's Been Implemented (Feb 24, 2026)
+### Member Dashboard
+- Browse members tab with search/filter
+- Shortlist members
+- Settings tab with Change Password
 
-### Completed
-- [x] Full-stack application setup (React + FastAPI + MongoDB)
-- [x] 8-step modular application form with save/resume
-- [x] Admin Dashboard for application management
-- [x] Member Dashboard with browse and shortlist functionality
-- [x] Google OAuth integration
-- [x] User's logo and favicon integrated
-- [x] Website copy focused on cost savings (not "matching")
-- [x] "Given Name" / "Family Name" labels (culturally appropriate)
-- [x] Property Management MVP (add individual/bulk via CSV)
-- [x] **Properties Page with Search/Filter** (city, state, type, bedrooms, rent, amenities)
-- [x] **Property Detail Page** (image gallery, property info, amenities)
-- [x] **Housing Type Dropdown Fix** (descriptive labels showing community type + bedroom count)
-- [x] **Light Theme Enforced** (color-scheme: light only)
-- [x] **Browse Properties Button** added to homepage navigation
-- [x] **Member Search/Filter** functionality in Member Dashboard
+### Admin Dashboard
+- Stats cards
+- Applications management (approve/reject)
+- Properties management
+- Members management
 
-### Mocked/Placeholder
-- Property image uploads (using placeholder URLs)
+### Static Pages
+- About, Contact, FAQ, Privacy, Terms, Cookie, Support, Resources, Sitemap, 404
 
-### Real Integrations
-- Resend email service for all transactional emails
+## Key API Endpoints
+- `/api/auth/register` - Register (requires approved application)
+- `/api/auth/login` - Login
+- `/api/auth/logout` - Logout
+- `/api/auth/me` - Get current user
+- `/api/auth/forgot-password` - Request password reset
+- `/api/auth/reset-password` - Reset password with token
+- `/api/auth/change-password` - Change password (authenticated)
+- `/api/applications/*` - Application CRUD
+- `/api/properties/*` - Property CRUD
+- `/api/members` - List members
+- `/api/shortlists/*` - Shortlist CRUD
+- `/api/contact` - Contact form
 
-## API Endpoints
+## DB Collections
+- `users` - {user_id, email, name, password_hash, role, application_id, ...}
+- `applications` - {application_id, email, status, first_name, last_name, ...}
+- `draft_applications` - {email, access_code, status, data, current_step}
+- `properties` - {property_id, city, state, weekly_rent_per_person, images, ...}
+- `shortlists` - {shortlist_id, user_id, shortlisted_user_id}
+- `password_reset_tokens` - {token, email, user_id, expires_at, used}
+- `admin_notes`, `audit_logs`, `contact_submissions`
 
-### Authentication
-- `GET /api/auth/google` - Initiate OAuth flow
-- `GET /api/auth/callback` - OAuth callback
-- `GET /api/auth/me` - Get current user
-- `POST /api/auth/logout` - Logout
+## Credentials
+- Admin: admin@housesharingseniors.com.au / HSSadmin2024!
+- Test User: jane.doe.test@example.com / testpass123
 
-### Applications
-- `POST /api/applications/start` - Start new application
-- `POST /api/applications/save` - Save application progress
-- `POST /api/applications/resume` - Resume with access code
-- `POST /api/applications/submit` - Submit application
-- `GET /api/applications` - List all (admin only)
-- `GET /api/applications/{id}` - Get single application
-- `PATCH /api/applications/{id}/status` - Update status
-
-### Properties
-- `GET /api/properties` - List all properties
-- `GET /api/properties/{id}` - Get single property
-- `POST /api/properties` - Create property (auth required)
-- `POST /api/properties/bulk` - Bulk create from CSV
-- `PATCH /api/properties/{id}` - Update property
-- `DELETE /api/properties/{id}` - Delete property
-
-### Members
-- `GET /api/members` - List approved members
-- `GET /api/shortlists` - Get user's shortlist
-- `POST /api/shortlists` - Add to shortlist
-- `DELETE /api/shortlists/{id}` - Remove from shortlist
-
-## Database Schema
-
-### users
-```json
-{
-  "user_id": "string",
-  "email": "string",
-  "name": "string",
-  "given_name": "string",
-  "family_name": "string",
-  "role": "admin|member",
-  "google_id": "string",
-  "picture": "string",
-  "created_at": "datetime",
-  "updated_at": "datetime"
-}
-```
-
-### applications
-```json
-{
-  "application_id": "string",
-  "email": "string",
-  "access_code": "string",
-  "status": "draft|pending|approved|rejected",
-  "form_data": { /* all 8 steps */ },
-  "current_step": "number",
-  "created_at": "datetime",
-  "updated_at": "datetime",
-  "submitted_at": "datetime"
-}
-```
-
-### properties
-```json
-{
-  "property_id": "string",
-  "address": "string",
-  "city": "string",
-  "state": "string",
-  "postcode": "string",
-  "property_type": "house|apartment|townhouse|unit",
-  "total_bedrooms": "number",
-  "available_bedrooms": "number",
-  "total_bathrooms": "number",
-  "weekly_rent_per_person": "number",
-  "amenities": ["array"],
-  "images": ["array"],
-  "description": "string",
-  "house_rules": "string",
-  "pet_policy": "string",
-  "smoking_policy": "string",
-  "status": "active|inactive",
-  "added_by_user_id": "string",
-  "created_at": "datetime",
-  "updated_at": "datetime"
-}
-```
+---
 
 ## Prioritized Backlog
 
-### P0 (Must Have - Complete)
-- [x] Dark mode fix
-- [x] Housing Type dropdown descriptive labels
-- [x] Property search/filter functionality
+### P0 (Critical)
+- ~~Approved applicant registration~~ DONE
+- ~~Forgot Password~~ DONE
+- ~~Change Password~~ DONE
 
-### P1 (Should Have - Next)
-- [ ] Real image uploads for properties (cloud storage)
-- [ ] Real email notifications (Resend/SES)
+### P1 (High)
+- User Favorites (save favorite properties and members)
+- Express Interest button on properties (functional with email to admin)
 
-### P2 (Nice to Have)
-- [x] Static content pages (About, Contact, Privacy, Terms, FAQ, Support, Resources, Sitemap, 404)
-- [ ] In-app messaging between members
-- [ ] Advanced member-matching algorithm
+### P2 (Medium)
+- Property "Interested Users" public list
+- Test existing Shortlist feature thoroughly
+- Move admin password from seed.py to environment variable
 
-### P3 (Future)
-- [ ] Vacancy/occupancy management
-- [ ] Admin user guide
-- [ ] Production deployment prep
-
-## Routes
-
-```
-/                       - Landing Page
-/apply                  - Start Application
-/apply/resume           - Resume Application
-/apply/form             - Application Form (8 steps)
-/properties             - Browse Properties (public)
-/properties/add         - Add Property (auth required)
-/properties/:id         - Property Detail Page
-/admin                  - Admin Dashboard (admin only)
-/dashboard              - Member Dashboard (auth required)
-/about                  - About Us Page
-/contact                - Contact Us Page (with form)
-/privacy                - Privacy Policy
-/cookies                - Cookie Policy
-/terms                  - Terms of Service
-/faq                    - Frequently Asked Questions
-/support                - Help & Support Center
-/resources              - Resources & Downloads
-/sitemap                - Sitemap
-*                       - 404 Not Found Page
-```
-
-## Notes
-- Default admin user is seeded during setup
-- All emails currently logged to backend console (MOCKED)
-- Property images use placeholder URLs (MOCKED)
-- User trust was low due to previous agent issues - maintain transparency
+### P3 (Lower)
+- Cloud image storage (replace local /uploads with S3/Cloudinary)
+- User Groups feature
+- In-app messaging between members
+- Production deployment preparation
