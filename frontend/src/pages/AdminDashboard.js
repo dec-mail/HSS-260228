@@ -33,21 +33,24 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('auth_token');
       const config = { withCredentials: true, headers: { Authorization: `Bearer ${token}` } };
       
-      const [appsRes, propsRes, membersRes] = await Promise.all([
+      const [appsRes, propsRes, membersRes, interestsRes] = await Promise.all([
         axios.get(`${API}/applications`, config),
         axios.get(`${API}/properties`),
-        axios.get(`${API}/members`, config).catch(() => ({ data: [] }))
+        axios.get(`${API}/members`, config).catch(() => ({ data: [] })),
+        axios.get(`${API}/interests`, config).catch(() => ({ data: [] }))
       ]);
       
       setApplications(appsRes.data);
       setProperties(propsRes.data);
       setMembers(membersRes.data);
+      setInterests(interestsRes.data);
       
       setStats({
         applications: appsRes.data.length,
         pending: appsRes.data.filter(a => a.status === 'pending').length,
         properties: propsRes.data.length,
-        members: membersRes.data.length
+        members: membersRes.data.length,
+        interests: interestsRes.data.filter(i => i.status === 'new').length
       });
     } catch (error) {
       console.error('Failed to fetch data:', error);
