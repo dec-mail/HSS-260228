@@ -1,9 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './LandingPage.css';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [properties, setProperties] = useState([]);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  useEffect(() => {
+    axios.get(`${API}/properties`).then(res => setProperties(res.data)).catch(() => {});
+  }, []);
+
+  const visibleCount = 3;
+  const maxIndex = Math.max(0, properties.length - visibleCount);
+
+  const nextSlide = useCallback(() => {
+    setCarouselIndex(i => i >= maxIndex ? 0 : i + 1);
+  }, [maxIndex]);
+
+  const prevSlide = () => {
+    setCarouselIndex(i => i <= 0 ? maxIndex : i - 1);
+  };
+
+  useEffect(() => {
+    if (properties.length <= visibleCount) return;
+    const timer = setInterval(nextSlide, 5000);
+    return () => clearInterval(timer);
+  }, [properties.length, nextSlide]);
 
   return (
     <div className="landing-page">
