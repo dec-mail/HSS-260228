@@ -26,7 +26,9 @@ from email_service import (
     send_application_approved_email,
     send_application_rejected_email,
     send_contact_form_email,
-    send_contact_confirmation_email
+    send_contact_confirmation_email,
+    send_password_reset_email,
+    send_registration_welcome_email
 )
 
 ROOT_DIR = Path(__file__).parent
