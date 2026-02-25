@@ -277,7 +277,7 @@ const PropertiesPage = () => {
                       <div className="property-footer">
                         <div className="property-price">
                           <span className="price">${property.weekly_rent_per_person}</span>
-                          <span className="period">/ week per person</span>
+                          <span className="period">/ week per bedroom</span>
                         </div>
                         <div className="property-actions">
                           <button 

@@ -491,7 +491,7 @@ const MemberDashboard = () => {
                           <div className="member-info" onClick={() => navigate(`/properties/${fav.item_id}`)}>
                             <h3>{fav.item_data.address || `${fav.item_data.city}, ${fav.item_data.state}`}</h3>
                             <p className="member-email">{fav.item_data.city}, {fav.item_data.state}</p>
-                            <p style={{ color: '#2563eb', fontWeight: '700', fontSize: '18px' }}>${fav.item_data.weekly_rent_per_person}/week</p>
+                            <p style={{ color: '#2563eb', fontWeight: '700', fontSize: '18px' }}>${fav.item_data.weekly_rent_per_person}/week per bed</p>
                           </div>
                           <div className="member-actions">
                             <button className="btn btn-danger" onClick={() => removeFavorite(fav.favorite_id)} data-testid={`remove-fav-${fav.favorite_id}`}>

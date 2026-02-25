@@ -109,7 +109,7 @@ const LandingPage = () => {
                       <div className="carousel-card-info">
                         <h3>{prop.address || `${prop.city}, ${prop.state}`}</h3>
                         <p className="carousel-location">{prop.city}, {prop.state} {prop.postcode || ''}</p>
-                        <div className="carousel-price">${prop.weekly_rent_per_person}<span>/week pp</span></div>
+                        <div className="carousel-price">${prop.weekly_rent_per_person}<span>/week per bed</span></div>
                         <div className="carousel-meta">
                           {prop.available_bedrooms && <span>{prop.available_bedrooms} bed{prop.available_bedrooms > 1 ? 's' : ''} avail</span>}
                           {prop.property_type && <span>{prop.property_type}</span>}

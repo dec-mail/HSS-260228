@@ -255,7 +255,7 @@ const EditProperty = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label className="input-label">Weekly Rent (per person) *</label>
+                <label className="input-label">Weekly Rent (per bedroom) *</label>
                 <input 
                   type="number" 
                   name="weekly_rent_per_person" 

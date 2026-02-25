@@ -205,7 +205,7 @@ const PropertyDetailPage = () => {
 
             <div className="price-box">
               <div className="price-amount">${property.weekly_rent_per_person}</div>
-              <div className="price-period">per week per person</div>
+              <div className="price-period">weekly rent per bedroom</div>
             </div>
 
             <div className="property-highlights">
