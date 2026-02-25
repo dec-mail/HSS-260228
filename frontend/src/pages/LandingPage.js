@@ -107,7 +107,7 @@ const LandingPage = () => {
                         )}
                       </div>
                       <div className="carousel-card-info">
-                        <h3>{prop.address || `${prop.city}, ${prop.state}`}</h3>
+                        <h3>{prop.city}, {prop.state}</h3>
                         <p className="carousel-location">{prop.city}, {prop.state} {prop.postcode || ''}</p>
                         <div className="carousel-price">${prop.weekly_rent_per_person}<span>/week per bedroom</span></div>
                         <div style={{ fontSize: '11px', color: '#059669' }}>
