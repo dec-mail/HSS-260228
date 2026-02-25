@@ -262,7 +262,7 @@ const PropertiesPage = () => {
                     <div className="property-details">
                       <h3 className="property-type">{property.property_type || 'Property'}</h3>
                       <p className="property-address">{property.city}, {property.state} {property.postcode || ''}</p>
-                      {property.total_bedrooms && <div style={{ fontSize: '13px', color: '#4b5563', fontWeight: '600' }}>Total rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week ({property.total_bedrooms} bedrooms)</div>}
+                      {property.total_bedrooms && <div style={{ fontSize: '13px', color: '#4b5563', fontWeight: '600' }}>Total rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week<br/>({property.total_bedrooms} bedrooms)</div>}
                       <div className="property-info">
                         <span>🛏 {property.available_bedrooms || '?'} available{property.total_bedrooms ? ` / ${property.total_bedrooms} total` : ''}</span>
                         {property.total_bathrooms && <span>🚿 {property.total_bathrooms} bath</span>}

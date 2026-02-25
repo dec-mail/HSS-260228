@@ -203,7 +203,7 @@ const PropertyDetailPage = () => {
             </h1>
 
             <div className="price-box">
-              {property.total_bedrooms && <div style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600', marginBottom: '8px' }}>Total rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week ({property.total_bedrooms} bedrooms)</div>}
+              {property.total_bedrooms && <div style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600', marginBottom: '8px' }}>Total rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week<br/>({property.total_bedrooms} bedrooms)</div>}
               <div className="price-amount">${property.weekly_rent_per_person}</div>
               <div className="price-period">weekly rent per bedroom</div>
               <div style={{ marginTop: '12px', padding: '12px', background: '#eff6ff', borderRadius: '8px', fontSize: '14px' }}>
