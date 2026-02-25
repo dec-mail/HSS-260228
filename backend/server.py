@@ -990,6 +990,78 @@ async def update_application_status(
     
     return {"message": f"Application {status}", "application_id": application_id, "status": status}
 
+@api_router.post("/applications/bulk-action")
+async def bulk_update_applications(request: Request, admin: User = Depends(require_admin)):
+    """Approve or reject multiple applications at once"""
+    body = await request.json()
+    application_ids = body.get("application_ids", [])
+    action = body.get("status")
+    
+    if action not in ("approved", "rejected"):
+        raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
+    if not application_ids:
+        raise HTTPException(status_code=400, detail="No applications selected")
+    
+    results = {"success": 0, "failed": 0, "errors": []}
+    now = datetime.now(timezone.utc).isoformat()
+    
+    for app_id in application_ids:
+        try:
+            app_doc = await db.applications.find_one({"application_id": app_id}, {"_id": 0})
+            if not app_doc:
+                results["errors"].append(f"{app_id}: not found")
+                results["failed"] += 1
+                continue
+            
+            old_status = app_doc["status"]
+            await db.applications.update_one(
+                {"application_id": app_id},
+                {"$set": {"status": action, "updated_at": now}}
+            )
+            
+            if action == "approved":
+                existing_user = await db.users.find_one({"email": app_doc["email"]}, {"_id": 0})
+                if not existing_user:
+                    user_id = f"user_{uuid.uuid4().hex[:12]}"
+                    user_dict = {
+                        "user_id": user_id,
+                        "email": app_doc["email"],
+                        "name": f"{app_doc.get('given_name', app_doc.get('first_name', ''))} {app_doc.get('family_name', app_doc.get('last_name', ''))}",
+                        "picture": None,
+                        "role": "member",
+                        "created_at": now
+                    }
+                    await db.users.insert_one(user_dict)
+            
+            # Audit log
+            await db.audit_logs.insert_one({
+                "log_id": f"log_{uuid.uuid4().hex[:12]}",
+                "application_id": app_id,
+                "action": "bulk_status_changed",
+                "admin_user_id": admin.user_id,
+                "old_status": old_status,
+                "new_status": action,
+                "timestamp": now
+            })
+            
+            # Send email
+            applicant_name = app_doc.get('given_name', app_doc.get('first_name', 'Applicant'))
+            try:
+                if action == "approved":
+                    frontend_url = os.environ.get("FRONTEND_URL", "")
+                    await send_application_approved_email(app_doc["email"], applicant_name, frontend_url)
+                else:
+                    await send_application_rejected_email(app_doc["email"], applicant_name)
+            except Exception as email_err:
+                logger.error(f"Email failed for {app_id}: {email_err}")
+            
+            results["success"] += 1
+        except Exception as e:
+            results["errors"].append(f"{app_id}: {str(e)}")
+            results["failed"] += 1
+    
+    return {"message": f"Bulk {action}: {results['success']} successful, {results['failed']} failed", **results}
+
 # ============ MEMBER ROUTES ============
 
 @api_router.get("/members")
