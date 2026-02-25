@@ -110,12 +110,12 @@ const LandingPage = () => {
                         <h3>{prop.city}, {prop.state} {prop.postcode || ''}</h3>
                         {prop.total_bedrooms && <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: '600' }}>Total rent: ${(prop.weekly_rent_per_person * prop.total_bedrooms).toFixed(0)}/week<br/>({prop.total_bedrooms} bedrooms)</div>}
                         <div className="carousel-price">${prop.weekly_rent_per_person}<span>/week per bedroom</span></div>
-                        <div style={{ fontSize: '11px', color: '#059669' }}>
+                        <div style={{ fontSize: '13px', color: '#059669', fontWeight: '700' }}>
                           {(() => {
                             const r = prop.weekly_rent_per_person;
                             const sCRA = Math.min(71.80, Math.max(0, 0.75 * (r - 76)));
                             const cCRA = Math.min(101.50, Math.max(0, 0.75 * (r - 123.10)));
-                            return <>Maximum CRA:<br/>Singles ${(r - sCRA).toFixed(2)}{sCRA > 0 ? ` (CRA $${sCRA.toFixed(2)})` : ' (no CRA)'}<br/>Couples ${(r - cCRA).toFixed(2)}{cCRA > 0 ? ` (CRA $${cCRA.toFixed(2)})` : ' (no CRA)'}</>;
+                            return <>After CRA:<br/><span style={{ fontSize: '15px' }}>Singles ${(r - sCRA).toFixed(2)}/wk</span><br/><span style={{ fontSize: '15px' }}>Couples ${(r - cCRA).toFixed(2)}/wk</span></>;
                           })()}
                         </div>
                         <div className="carousel-meta">
