@@ -513,6 +513,14 @@ const MemberDashboard = () => {
                       >
                         {isFavorited(member.user_id, 'member') ? '♥' : '♡'}
                       </button>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => startNewMessage(member.user_id, member.name)}
+                        style={{ marginRight: '8px', fontSize: '12px', padding: '4px 10px' }}
+                        data-testid={`msg-member-btn-${member.user_id}`}
+                      >
+                        Message
+                      </button>
                       {isShortlisted(member.user_id) ? (
                         <button 
                           className="btn btn-secondary" 
