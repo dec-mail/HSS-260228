@@ -172,35 +172,43 @@ class AuditLog(BaseModel):
 class Property(BaseModel):
     model_config = ConfigDict(extra="ignore")
     property_id: str
-    added_by_user_id: str
+    added_by_user_id: Optional[str] = None
     
-    # Property Details
-    property_type: str
-    address: str
-    city: str
-    state: str
-    postcode: str
+    # Basic Info (Required)
+    city: str  # Suburb/Town - Required
+    state: str  # Required
+    weekly_rent_per_person: float  # Required
     
-    # Accommodation Details
-    total_bedrooms: int
-    available_bedrooms: int
-    total_bathrooms: int
+    # Property Details (Optional)
+    property_type: Optional[str] = "house"
+    address: Optional[str] = None  # Can be TBA
+    postcode: Optional[str] = None
     
-    # Financial
-    weekly_rent_per_person: float
+    # Accommodation Details (Optional - can be TBA/NA)
+    total_bedrooms: Optional[int] = None
+    available_bedrooms: Optional[int] = None
+    total_bathrooms: Optional[int] = None
+    
+    # Financial (Optional)
     bond_required: Optional[float] = None
     
-    # Amenities
-    amenities: List[str]
+    # Amenities (Optional)
+    amenities: Optional[List[str]] = []
     
-    # Availability
-    available_from: str
+    # Availability (Optional)
+    available_from: Optional[str] = None
     
-    # Images
-    images: List[str]
+    # Images (Optional - up to 20)
+    images: Optional[List[str]] = []
     
-    # Description
-    description: str
+    # Description (Optional)
+    description: Optional[str] = None
+    
+    # Additional fields
+    house_rules: Optional[str] = None
+    pet_policy: Optional[str] = None
+    smoking_policy: Optional[str] = None
+    lease_term: Optional[str] = None
     
     # Status
     status: Literal["active", "inactive", "pending"] = "active"
@@ -210,20 +218,27 @@ class Property(BaseModel):
     updated_at: str
 
 class PropertyCreate(BaseModel):
-    property_type: str
-    address: str
-    city: str
-    state: str
-    postcode: str
-    total_bedrooms: int
-    available_bedrooms: int
-    total_bathrooms: int
-    weekly_rent_per_person: float
+    # Required fields (minimal)
+    city: str  # Suburb/Town - Required
+    state: str  # Required
+    weekly_rent_per_person: float  # Required
+    
+    # Optional fields
+    property_type: Optional[str] = "house"
+    address: Optional[str] = None
+    postcode: Optional[str] = None
+    total_bedrooms: Optional[int] = None
+    available_bedrooms: Optional[int] = None
+    total_bathrooms: Optional[int] = None
     bond_required: Optional[float] = None
-    amenities: List[str]
-    available_from: str
-    images: List[str]
-    description: str
+    amenities: Optional[List[str]] = []
+    available_from: Optional[str] = None
+    images: Optional[List[str]] = []
+    description: Optional[str] = None
+    house_rules: Optional[str] = None
+    pet_policy: Optional[str] = None
+    smoking_policy: Optional[str] = None
+    lease_term: Optional[str] = None
 
 # ============ AUTH HELPERS ============
 
