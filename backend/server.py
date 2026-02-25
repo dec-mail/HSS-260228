@@ -1031,6 +1031,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def seed_admin():
+    """Create default admin user if not exists"""
+    admin_email = "admin@housesharingseniors.com.au"
+    admin_exists = await db.users.find_one({"email": admin_email})
+    
+    if not admin_exists:
+        admin_doc = {
+            "user_id": "user_admin001",
+            "email": admin_email,
+            "name": "HSS Admin",
+            "password_hash": hash_password("HSSadmin2024!"),
+            "picture": None,
+            "role": "admin",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(admin_doc)
+        logger.info(f"Created default admin user: {admin_email}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
