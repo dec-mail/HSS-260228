@@ -1308,7 +1308,7 @@ async def seed_admin():
             "user_id": "user_admin001",
             "email": admin_email,
             "name": "HSS Admin",
-            "password_hash": hash_password("HSSadmin2024!"),
+            "password_hash": hash_password(os.environ.get("ADMIN_PASSWORD", "HSSadmin2024!")),
             "picture": None,
             "role": "admin",
             "created_at": datetime.now(timezone.utc).isoformat()
