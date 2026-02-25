@@ -737,20 +737,27 @@ async def get_property(property_id: str):
     return Property(**prop_doc)
 
 @api_router.patch("/properties/{property_id}")
-async def update_property(property_id: str, updates: dict, user: User = Depends(get_current_user)):
+async def update_property(property_id: str, request: Request, user: User = Depends(get_current_user)):
     """Update property details"""
     prop_doc = await db.properties.find_one({"property_id": property_id}, {"_id": 0})
     if not prop_doc:
         raise HTTPException(status_code=404, detail="Property not found")
     
-    # Check permission
-    if prop_doc["added_by_user_id"] != user.user_id and user.role != "admin":
+    # Check permission - allow owner or admin
+    if prop_doc.get("added_by_user_id") != user.user_id and user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to update this property")
     
+    updates = await request.json()
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Don't allow changing property_id or created_at
+    updates.pop("property_id", None)
+    updates.pop("created_at", None)
+    updates.pop("added_by_user_id", None)
+    
     await db.properties.update_one({"property_id": property_id}, {"$set": updates})
     
-    return {"message": "Property updated"}
+    return {"message": "Property updated", "property_id": property_id}
 
 @api_router.delete("/properties/{property_id}")
 async def delete_property(property_id: str, user: User = Depends(get_current_user)):
