@@ -180,6 +180,106 @@ const MemberDashboard = () => {
     }
   };
 
+  // Groups functions
+  const fetchGroups = async () => {
+    try {
+      const response = await axios.get(`${API}/groups`, getAuthConfig());
+      setGroups(response.data);
+    } catch (e) { console.error('Failed to fetch groups:', e); }
+  };
+
+  const createGroup = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/groups`, groupForm, getAuthConfig());
+      setGroupForm({ name: '', description: '', housing_preference: '' });
+      setShowCreateGroup(false);
+      fetchGroups();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to create group');
+    }
+  };
+
+  const joinGroup = async (groupId) => {
+    try {
+      await axios.post(`${API}/groups/${groupId}/join`, {}, getAuthConfig());
+      fetchGroups();
+    } catch (error) { alert('Failed to join group'); }
+  };
+
+  const leaveGroup = async (groupId) => {
+    try {
+      await axios.post(`${API}/groups/${groupId}/leave`, {}, getAuthConfig());
+      fetchGroups();
+    } catch (error) { alert('Failed to leave group'); }
+  };
+
+  const deleteGroup = async (groupId) => {
+    if (!window.confirm('Delete this group?')) return;
+    try {
+      await axios.delete(`${API}/groups/${groupId}`, getAuthConfig());
+      fetchGroups();
+    } catch (error) { alert('Failed to delete group'); }
+  };
+
+  // Messages functions
+  const fetchConversations = async () => {
+    try {
+      const response = await axios.get(`${API}/messages/conversations`, getAuthConfig());
+      setConversations(response.data);
+      const unread = response.data.reduce((sum, c) => sum + c.unread_count, 0);
+      setUnreadCount(unread);
+    } catch (e) { console.error('Failed to fetch conversations:', e); }
+  };
+
+  const openConversation = async (conversationId) => {
+    setActiveConversation(conversationId);
+    try {
+      const response = await axios.get(`${API}/messages/${conversationId}`, getAuthConfig());
+      setConversationMessages(response.data);
+      fetchConversations();
+    } catch (error) { console.error('Failed to fetch messages:', error); }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    const toUserId = messageRecipient || (() => {
+      const conv = conversations.find(c => c.conversation_id === activeConversation);
+      if (!conv) return null;
+      const msg = conv.last_message;
+      return msg.from_user_id === currentUser?.user_id ? msg.to_user_id : msg.from_user_id;
+    })();
+    if (!toUserId) return;
+    try {
+      await axios.post(`${API}/messages`, { to_user_id: toUserId, content: newMessage }, getAuthConfig());
+      setNewMessage('');
+      if (activeConversation) openConversation(activeConversation);
+      else {
+        fetchConversations();
+        const pair = [currentUser.user_id, toUserId].sort();
+        const convId = `conv_${pair[0]}_${pair[1]}`;
+        setActiveConversation(convId);
+        openConversation(convId);
+      }
+      setMessageRecipient(null);
+    } catch (error) { alert(error.response?.data?.detail || 'Failed to send message'); }
+  };
+
+  const startNewMessage = (userId, userName) => {
+    setActiveTab('messages');
+    setMessageRecipient(userId);
+    const pair = [currentUser.user_id, userId].sort();
+    const convId = `conv_${pair[0]}_${pair[1]}`;
+    const existingConv = conversations.find(c => c.conversation_id === convId);
+    if (existingConv) {
+      openConversation(convId);
+    } else {
+      setActiveConversation(null);
+      setConversationMessages([]);
+    }
+  };
+
   const addToShortlist = async (userId) => {
     try {
       await axios.post(`${API}/shortlists?shortlisted_user_id=${userId}`, {}, getAuthConfig());
