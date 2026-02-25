@@ -171,6 +171,42 @@ const AdminDashboard = () => {
     }
   };
 
+  const toggleSelectApp = (appId) => {
+    setSelectedApps(prev => prev.includes(appId) ? prev.filter(id => id !== appId) : [...prev, appId]);
+  };
+
+  const toggleSelectAll = () => {
+    const filtered = filteredApplications();
+    if (selectedApps.length === filtered.length) {
+      setSelectedApps([]);
+    } else {
+      setSelectedApps(filtered.map(a => a.application_id));
+    }
+  };
+
+  const bulkAction = async (status) => {
+    if (selectedApps.length === 0) return alert('No applications selected');
+    if (!window.confirm(`${status === 'approved' ? 'Approve' : 'Reject'} ${selectedApps.length} application(s)?`)) return;
+    setBulkLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await axios.post(`${API}/applications/bulk-action`, {
+        application_ids: selectedApps, status
+      }, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } });
+      alert(res.data.message);
+      setSelectedApps([]);
+      fetchAllData();
+    } catch (error) {
+      alert('Bulk action failed');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const filteredApplications = () => {
+    return filterStatus === 'all' ? applications : applications.filter(a => a.status === filterStatus);
+  };
+
   return (
     <div className="admin-dashboard" data-testid="admin-dashboard">
       <header className="dashboard-header">
