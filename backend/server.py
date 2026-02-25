@@ -437,6 +437,110 @@ async def get_me(user: User = Depends(get_current_user)):
     """Get current authenticated user"""
     return user.model_dump()
 
+# ============ PASSWORD MANAGEMENT ============
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest):
+    """Send password reset email"""
+    user_doc = await db.users.find_one({"email": req.email}, {"_id": 0})
+    
+    # Always return success to prevent email enumeration
+    if not user_doc or not user_doc.get("password_hash"):
+        return {"message": "If an account exists with that email, a reset link has been sent."}
+    
+    # Generate reset token
+    reset_token = uuid.uuid4().hex
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+    
+    # Invalidate any existing tokens for this email
+    await db.password_reset_tokens.delete_many({"email": req.email})
+    
+    # Store token
+    await db.password_reset_tokens.insert_one({
+        "token": reset_token,
+        "email": req.email,
+        "user_id": user_doc["user_id"],
+        "expires_at": expires_at,
+        "used": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Build reset link using frontend URL
+    frontend_url = os.environ.get("FRONTEND_URL", "")
+    if not frontend_url:
+        # Derive from request or use a sensible default
+        frontend_url = ""
+    reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+    
+    # Send email
+    await send_password_reset_email(req.email, user_doc.get("name", "User"), reset_link)
+    
+    return {"message": "If an account exists with that email, a reset link has been sent."}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(req: ResetPasswordRequest):
+    """Reset password using token"""
+    if len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Find the token
+    token_doc = await db.password_reset_tokens.find_one({"token": req.token, "used": False})
+    if not token_doc:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link. Please request a new one.")
+    
+    # Check expiry
+    expires_at = datetime.fromisoformat(token_doc["expires_at"])
+    if datetime.now(timezone.utc) > expires_at:
+        await db.password_reset_tokens.update_one({"token": req.token}, {"$set": {"used": True}})
+        raise HTTPException(status_code=400, detail="Reset link has expired. Please request a new one.")
+    
+    # Update password
+    new_hash = hash_password(req.password)
+    await db.users.update_one(
+        {"user_id": token_doc["user_id"]},
+        {"$set": {"password_hash": new_hash}}
+    )
+    
+    # Mark token as used
+    await db.password_reset_tokens.update_one({"token": req.token}, {"$set": {"used": True}})
+    
+    return {"message": "Password reset successfully. You can now login with your new password."}
+
+@api_router.post("/auth/change-password")
+async def change_password(req: ChangePasswordRequest, user: User = Depends(get_current_user)):
+    """Change password for authenticated user"""
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    
+    # Get user with password hash
+    user_doc = await db.users.find_one({"user_id": user.user_id})
+    if not user_doc or not user_doc.get("password_hash"):
+        raise HTTPException(status_code=400, detail="Cannot change password for this account")
+    
+    # Verify current password
+    if not verify_password(req.current_password, user_doc["password_hash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Update password
+    new_hash = hash_password(req.new_password)
+    await db.users.update_one(
+        {"user_id": user.user_id},
+        {"$set": {"password_hash": new_hash}}
+    )
+    
+    return {"message": "Password changed successfully"}
+
 
 # ============ DRAFT APPLICATION ROUTES (Save/Resume) ============
 
