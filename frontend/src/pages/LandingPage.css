@@ -365,10 +365,10 @@
 }
 
 .carousel-price {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2563eb;
-  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+  margin-bottom: 2px;
 }
 
 .carousel-price span {
