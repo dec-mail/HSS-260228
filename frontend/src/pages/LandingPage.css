@@ -279,3 +279,140 @@
     gap: 32px;
   }
 }
+
+/* Property Carousel */
+.property-carousel-section {
+  padding: 60px 0 80px;
+  background: white;
+}
+
+.carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.carousel-track-wrapper {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.carousel-card {
+  min-width: calc(100% / 3);
+  padding: 0 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.carousel-card-image {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.carousel-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.carousel-card:hover .carousel-card-image img {
+  transform: scale(1.05);
+}
+
+.carousel-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 14px;
+  background: #e5e7eb;
+}
+
+.carousel-card-info {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+}
+
+.carousel-card-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: #1a2332;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carousel-location {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.carousel-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 6px;
+}
+
+.carousel-price span {
+  font-size: 13px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.carousel-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.carousel-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-size: 24px;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.carousel-arrow:hover {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+@media (max-width: 768px) {
+  .carousel-card {
+    min-width: 100%;
+  }
+  .carousel-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+}
