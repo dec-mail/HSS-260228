@@ -1077,6 +1077,153 @@ async def remove_from_shortlist(shortlist_id: str, user: User = Depends(get_curr
     
     return {"message": "Removed from shortlist"}
 
+# ============ EXPRESS INTEREST ROUTES ============
+
+class ExpressInterestRequest(BaseModel):
+    property_id: str
+    message: Optional[str] = ""
+    phone: Optional[str] = ""
+
+@api_router.post("/interests")
+async def express_interest(req: ExpressInterestRequest, user: User = Depends(get_current_user)):
+    """Express interest in a property"""
+    # Check property exists
+    prop = await db.properties.find_one({"property_id": req.property_id}, {"_id": 0})
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    # Check if already expressed interest
+    existing = await db.property_interests.find_one({
+        "user_id": user.user_id, "property_id": req.property_id
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already expressed interest in this property")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    interest_doc = {
+        "interest_id": f"int_{uuid.uuid4().hex[:12]}",
+        "user_id": user.user_id,
+        "user_name": user.name,
+        "user_email": user.email,
+        "property_id": req.property_id,
+        "property_location": f"{prop.get('city', '')}, {prop.get('state', '')}",
+        "property_address": prop.get("address", "TBA"),
+        "message": req.message,
+        "phone": req.phone,
+        "status": "new",
+        "created_at": now
+    }
+    await db.property_interests.insert_one(interest_doc)
+    
+    # Email admin about the interest
+    try:
+        from email_service import send_email
+        admin_html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1a2332;">New Property Interest</h2>
+            <p><strong>{user.name}</strong> ({user.email}) has expressed interest in a property.</p>
+            <table style="width:100%; border-collapse:collapse;">
+                <tr><td style="padding:8px; border-bottom:1px solid #eee; font-weight:bold;">Property:</td><td style="padding:8px; border-bottom:1px solid #eee;">{prop.get('address', 'TBA')} - {prop.get('city')}, {prop.get('state')}</td></tr>
+                <tr><td style="padding:8px; border-bottom:1px solid #eee; font-weight:bold;">Rent:</td><td style="padding:8px; border-bottom:1px solid #eee;">${prop.get('weekly_rent_per_person')}/week</td></tr>
+                <tr><td style="padding:8px; border-bottom:1px solid #eee; font-weight:bold;">Phone:</td><td style="padding:8px; border-bottom:1px solid #eee;">{req.phone or 'Not provided'}</td></tr>
+                <tr><td style="padding:8px; font-weight:bold;">Message:</td><td style="padding:8px;">{req.message or 'No message'}</td></tr>
+            </table>
+        </div>
+        """
+        admin_email = os.environ.get("ADMIN_EMAIL", "apps@decsites.org")
+        await send_email(admin_email, f"[Interest] {user.name} - {prop.get('city')}, {prop.get('state')}", admin_html)
+    except Exception as e:
+        logger.error(f"Failed to send interest notification: {e}")
+    
+    interest_doc.pop("_id", None)
+    return {"message": "Interest expressed successfully", "interest_id": interest_doc["interest_id"]}
+
+@api_router.get("/interests")
+async def list_interests(admin: User = Depends(require_admin)):
+    """List all property interests (admin only)"""
+    interests = await db.property_interests.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return interests
+
+@api_router.get("/interests/my")
+async def get_my_interests(user: User = Depends(get_current_user)):
+    """Get current user's interests"""
+    interests = await db.property_interests.find({"user_id": user.user_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return interests
+
+@api_router.patch("/interests/{interest_id}/status")
+async def update_interest_status(interest_id: str, request: Request, admin: User = Depends(require_admin)):
+    """Update interest status (admin only)"""
+    body = await request.json()
+    new_status = body.get("status", "reviewed")
+    result = await db.property_interests.update_one(
+        {"interest_id": interest_id},
+        {"$set": {"status": new_status}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Interest not found")
+    return {"message": f"Interest marked as {new_status}"}
+
+# ============ FAVORITES ROUTES ============
+
+class FavoriteRequest(BaseModel):
+    item_id: str
+    item_type: Literal["property", "member"]
+
+@api_router.post("/favorites")
+async def add_favorite(req: FavoriteRequest, user: User = Depends(get_current_user)):
+    """Add a property or member to favorites"""
+    existing = await db.favorites.find_one({
+        "user_id": user.user_id, "item_id": req.item_id, "item_type": req.item_type
+    })
+    if existing:
+        return {"message": "Already in favorites"}
+    
+    fav_doc = {
+        "favorite_id": f"fav_{uuid.uuid4().hex[:12]}",
+        "user_id": user.user_id,
+        "item_id": req.item_id,
+        "item_type": req.item_type,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.favorites.insert_one(fav_doc)
+    fav_doc.pop("_id", None)
+    return {"message": "Added to favorites", "favorite": fav_doc}
+
+@api_router.get("/favorites")
+async def get_my_favorites(user: User = Depends(get_current_user), item_type: Optional[str] = None):
+    """Get current user's favorites"""
+    query = {"user_id": user.user_id}
+    if item_type:
+        query["item_type"] = item_type
+    
+    favs = await db.favorites.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Enrich with item details
+    result = []
+    for fav in favs:
+        item_data = None
+        if fav["item_type"] == "property":
+            item_data = await db.properties.find_one({"property_id": fav["item_id"]}, {"_id": 0})
+        elif fav["item_type"] == "member":
+            item_data = await db.users.find_one({"user_id": fav["item_id"]}, {"_id": 0})
+            if item_data:
+                item_data.pop("password_hash", None)
+        
+        if item_data:
+            result.append({**fav, "item_data": item_data})
+    
+    return result
+
+@api_router.delete("/favorites/{favorite_id}")
+async def remove_favorite(favorite_id: str, user: User = Depends(get_current_user)):
+    """Remove from favorites"""
+    result = await db.favorites.delete_one({
+        "favorite_id": favorite_id, "user_id": user.user_id
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Favorite not found")
+    return {"message": "Removed from favorites"}
+
 # ============ ADMIN NOTES ROUTES ============
 
 @api_router.post("/admin-notes")
