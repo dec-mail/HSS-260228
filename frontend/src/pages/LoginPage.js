@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './StaticPages.css';
 
@@ -8,6 +8,7 @@ const API = `${BACKEND_URL}/api`;
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,6 +17,17 @@ const LoginPage = () => {
     password: '',
     name: ''
   });
+
+  useEffect(() => {
+    const registerMode = searchParams.get('register');
+    const prefillEmail = searchParams.get('email');
+    if (registerMode === 'true') {
+      setIsLogin(false);
+    }
+    if (prefillEmail) {
+      setFormData(prev => ({ ...prev, email: prefillEmail }));
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
