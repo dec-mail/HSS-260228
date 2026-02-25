@@ -19,6 +19,8 @@ const AdminDashboard = () => {
   const [adminNotes, setAdminNotes] = useState([]);
   const [newNote, setNewNote] = useState('');
   const [stats, setStats] = useState({ applications: 0, pending: 0, properties: 0, members: 0, interests: 0 });
+  const [selectedApps, setSelectedApps] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     fetchAllData();
