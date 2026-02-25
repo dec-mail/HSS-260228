@@ -46,6 +46,7 @@ function App() {
         <Route path="/properties/:propertyId/edit" element={<ProtectedRoute><EditProperty /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
+        <Route path="/members/:userId" element={<ProtectedRoute><MemberProfilePage /></ProtectedRoute>} />
         {/* Static Pages */}
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
