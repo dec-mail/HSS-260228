@@ -216,6 +216,11 @@
   border-top: 1px solid #e5e7eb;
 }
 
+.property-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .property-price {
   display: flex;
   flex-direction: column;
