@@ -717,7 +717,7 @@ async def create_application(application: ApplicationCreate):
     
     return Application(**app_dict)
 
-@api_router.get("/applications", response_model=List[Application])
+@api_router.get("/applications")
 async def list_applications(admin: User = Depends(require_admin), status: Optional[str] = None):
     """List all applications (admin only)"""
     query = {}
@@ -728,7 +728,8 @@ async def list_applications(admin: User = Depends(require_admin), status: Option
     cursor = db.applications.find(query).sort("created_at", -1)
     async for doc in cursor:
         doc.pop("_id", None)
-        applications.append(Application(**doc))
+        # Return raw docs to handle incomplete applications
+        applications.append(doc)
     return applications
 
 
