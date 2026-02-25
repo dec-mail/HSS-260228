@@ -167,11 +167,7 @@ const MemberDashboard = () => {
 
   const addToShortlist = async (userId) => {
     try {
-      await axios.post(
-        `${API}/shortlists?shortlisted_user_id=${userId}`,
-        {},
-        { withCredentials: true }
-      );
+      await axios.post(`${API}/shortlists?shortlisted_user_id=${userId}`, {}, getAuthConfig());
       alert('Added to your shortlist!');
       fetchShortlists();
     } catch (error) {
@@ -182,7 +178,7 @@ const MemberDashboard = () => {
 
   const removeFromShortlist = async (shortlistId) => {
     try {
-      await axios.delete(`${API}/shortlists/${shortlistId}`, { withCredentials: true });
+      await axios.delete(`${API}/shortlists/${shortlistId}`, getAuthConfig());
       alert('Removed from shortlist');
       fetchShortlists();
     } catch (error) {
