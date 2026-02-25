@@ -500,7 +500,7 @@ const MemberDashboard = () => {
                       )}
                     </div>
                     <div className="member-info">
-                      <h3>{member.name}</h3>
+                      <h3 style={{ cursor: 'pointer', color: '#2563eb' }} onClick={() => navigate(`/members/${member.user_id}`)} data-testid={`member-name-${member.user_id}`}>{member.name}</h3>
                       <p className="member-email">{member.email}</p>
                       <p className="member-date">Member since {new Date(member.created_at).toLocaleDateString()}</p>
                     </div>
