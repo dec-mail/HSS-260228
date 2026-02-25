@@ -89,11 +89,18 @@ const MemberDashboard = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await axios.get(`${API}/auth/me`, { withCredentials: true });
+      const token = localStorage.getItem('auth_token');
+      const config = { withCredentials: true, headers: token ? { Authorization: `Bearer ${token}` } : {} };
+      const response = await axios.get(`${API}/auth/me`, config);
       setCurrentUser(response.data);
     } catch (error) {
       console.error('Failed to fetch user:', error);
     }
+  };
+
+  const getAuthConfig = () => {
+    const token = localStorage.getItem('auth_token');
+    return { withCredentials: true, headers: token ? { Authorization: `Bearer ${token}` } : {} };
   };
 
   const fetchMembers = async () => {
