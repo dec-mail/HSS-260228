@@ -378,6 +378,8 @@ async def start_application(request: Request):
     existing = await db.draft_applications.find_one({"email": email, "status": "draft"}, {"_id": 0})
     
     if existing:
+        # Send reminder email with existing access code
+        await send_access_code_email(email, existing["access_code"])
         return {"access_code": existing["access_code"], "existing": True}
     
     # Create new draft
@@ -393,12 +395,8 @@ async def start_application(request: Request):
     }
     await db.draft_applications.insert_one(draft)
     
-    # Send email with access code (mocked)
-    send_email_notification(
-        to_email=email,
-        subject="Your House Sharing Seniors Application",
-        body=f"Your application access code is: {access_code}\\n\\nUse this code to resume your application at any time."
-    )
+    # Send email with access code (REAL EMAIL via Resend)
+    await send_access_code_email(email, access_code)
     
     return {"access_code": access_code, "existing": False}
 
