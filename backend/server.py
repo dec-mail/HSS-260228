@@ -709,7 +709,7 @@ async def update_application_status(
             user_dict = {
                 "user_id": user_id,
                 "email": app_doc["email"],
-                "name": f"{app_doc['first_name']} {app_doc['last_name']}",
+                "name": f"{app_doc.get('given_name', app_doc.get('first_name', ''))} {app_doc.get('family_name', app_doc.get('last_name', ''))}",
                 "picture": None,
                 "role": "member",
                 "created_at": now
@@ -728,19 +728,12 @@ async def update_application_status(
     }
     await db.audit_logs.insert_one(log_dict)
     
-    # Send notification email (mocked)
+    # Send notification email (REAL EMAIL via Resend)
+    applicant_name = app_doc.get('given_name', app_doc.get('first_name', 'Applicant'))
     if status == "approved":
-        send_email_notification(
-            to_email=app_doc["email"],
-            subject="Application Approved - House Sharing Seniors",
-            body=f"Dear {app_doc['first_name']},\n\nCongratulations! Your application has been approved. You can now log in to access the platform.\n\nBest regards,\nHouse Sharing Seniors Team"
-        )
+        await send_application_approved_email(app_doc["email"], applicant_name)
     else:
-        send_email_notification(
-            to_email=app_doc["email"],
-            subject="Application Status Update - House Sharing Seniors",
-            body=f"Dear {app_doc['first_name']},\n\nThank you for your interest. Unfortunately, we are unable to approve your application at this time.\n\nBest regards,\nHouse Sharing Seniors Team"
-        )
+        await send_application_rejected_email(app_doc["email"], applicant_name)
     
     return {"message": f"Application {status}", "application_id": application_id, "status": status}
 
