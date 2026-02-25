@@ -34,6 +34,8 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/apply" element={<StartApplication />} />
         <Route path="/apply/resume" element={<ResumeApplication />} />
         <Route path="/apply/form" element={<ApplicationFormNew />} />
