@@ -31,12 +31,27 @@ const MemberDashboard = () => {
   
   // Favorites state
   const [favorites, setFavorites] = useState([]);
+  
+  // Groups state
+  const [groups, setGroups] = useState([]);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [groupForm, setGroupForm] = useState({ name: '', description: '', housing_preference: '' });
+  
+  // Messages state
+  const [conversations, setConversations] = useState([]);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [conversationMessages, setConversationMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [messageRecipient, setMessageRecipient] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchCurrentUser();
     fetchMembers();
     fetchShortlists();
     fetchFavorites();
+    fetchGroups();
+    fetchConversations();
   }, []);
 
   useEffect(() => {
