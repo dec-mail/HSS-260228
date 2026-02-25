@@ -125,6 +125,24 @@ const LoginPage = () => {
               </button>
             </form>
             
+            {isLogin && (
+              <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                <button
+                  onClick={() => navigate('/forgot-password')}
+                  style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '14px', textDecoration: 'underline' }}
+                  data-testid="forgot-password-link"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div style={{ background: '#eff6ff', border: '1px solid #3b82f6', borderRadius: '8px', padding: '12px', marginTop: '16px', fontSize: '14px', color: '#1e40af' }}>
+                <strong>Note:</strong> Registration is only available for applicants whose application has been approved. If you haven't applied yet, please <a href="/apply" style={{ color: '#2563eb', fontWeight: '600' }}>submit an application</a> first.
+              </div>
+            )}
+
             <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
               <p style={{ color: '#6b7280' }}>
                 {isLogin ? "Don't have an account?" : "Already have an account?"}
