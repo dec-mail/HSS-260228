@@ -5,6 +5,7 @@ import StartApplication from './pages/StartApplication';
 import ResumeApplication from './pages/ResumeApplication';
 import ApplicationFormNew from './pages/ApplicationFormNew';
 import AddProperty from './pages/AddProperty';
+import EditProperty from './pages/EditProperty';
 import PropertiesPage from './pages/PropertiesPage';
 import PropertyDetailPage from './pages/PropertyDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
@@ -42,6 +43,7 @@ function AppRouter() {
       <Route path="/properties" element={<PropertiesPage />} />
       <Route path="/properties/add" element={<ProtectedRoute><AddProperty /></ProtectedRoute>} />
       <Route path="/properties/:propertyId" element={<PropertyDetailPage />} />
+      <Route path="/properties/:propertyId/edit" element={<ProtectedRoute><EditProperty /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
       {/* Static Pages */}
