@@ -272,14 +272,13 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
-# ============ MOCK EMAIL HELPER ============
+# ============ LEGACY MOCK EMAIL HELPER (DEPRECATED - Now using Resend) ============
 
 def send_email_notification(to_email: str, subject: str, body: str):
-    """Mock email notification (logs only for now)"""
-    logger.info(f"[EMAIL] To: {to_email}")
-    logger.info(f"[EMAIL] Subject: {subject}")
-    logger.info(f"[EMAIL] Body: {body}")
-    # TODO: Integrate SendGrid later
+    """DEPRECATED: Mock email notification - keeping for backwards compatibility"""
+    logger.info(f"[DEPRECATED EMAIL MOCK] To: {to_email}")
+    logger.info(f"[DEPRECATED EMAIL MOCK] Subject: {subject}")
+    # Real emails are now sent via email_service.py using Resend
 
 # ============ ROUTES ============
 
