@@ -107,10 +107,9 @@ const LandingPage = () => {
                         )}
                       </div>
                       <div className="carousel-card-info">
-                        <h3>{prop.city}, {prop.state}</h3>
-                        <p className="carousel-location">{prop.city}, {prop.state} {prop.postcode || ''}</p>
+                        <h3>{prop.city}, {prop.state} {prop.postcode || ''}</h3>
+                        {prop.total_bedrooms && <div style={{ fontSize: '12px', color: '#4b5563', fontWeight: '600' }}>Total rent: ${(prop.weekly_rent_per_person * prop.total_bedrooms).toFixed(0)}/week ({prop.total_bedrooms} bedrooms)</div>}
                         <div className="carousel-price">${prop.weekly_rent_per_person}<span>/week per bedroom</span></div>
-                        {prop.total_bedrooms && <div style={{ fontSize: '12px', color: '#4b5563' }}>Gross rent: ${(prop.weekly_rent_per_person * prop.total_bedrooms).toFixed(0)}/week ({prop.total_bedrooms} bedrooms)</div>}
                         <div style={{ fontSize: '11px', color: '#059669' }}>
                           Maximum CRA:<br/>Singles ${Math.max(0, prop.weekly_rent_per_person - 71.80).toFixed(2)}<br/>Couples ${Math.max(0, prop.weekly_rent_per_person - 101.50).toFixed(2)}
                         </div>
