@@ -260,11 +260,11 @@ const PropertiesPage = () => {
                       )}
                     </div>
                     <div className="property-details">
-                      <h3 className="property-type">{property.property_type}</h3>
-                      <p className="property-address">{property.address}, {property.city}</p>
+                      <h3 className="property-type">{property.property_type || 'Property'}</h3>
+                      <p className="property-address">{property.address || property.city}, {property.city}</p>
                       <div className="property-info">
-                        <span>🛏 {property.available_bedrooms} available / {property.total_bedrooms} total</span>
-                        <span>🚿 {property.total_bathrooms} bath</span>
+                        <span>🛏 {property.available_bedrooms || '?'} available{property.total_bedrooms ? ` / ${property.total_bedrooms} total` : ''}</span>
+                        {property.total_bathrooms && <span>🚿 {property.total_bathrooms} bath</span>}
                       </div>
                       <div className="property-amenities">
                         {property.amenities?.slice(0, 3).map(amenity => (
