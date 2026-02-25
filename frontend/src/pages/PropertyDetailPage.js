@@ -207,7 +207,7 @@ const PropertyDetailPage = () => {
               <div className="price-amount">${property.weekly_rent_per_person}</div>
               <div className="price-period">weekly rent per bedroom</div>
               <div style={{ marginTop: '12px', padding: '12px', background: '#eff6ff', borderRadius: '8px', fontSize: '14px' }}>
-                <div style={{ fontWeight: '600', color: '#1e40af', marginBottom: '6px' }}>After CRA (Commonwealth Rent Assistance):</div>
+                <div style={{ fontWeight: '600', color: '#1e40af', marginBottom: '6px' }}>Maximum CRA (Commonwealth Rent Assistance):</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#4b5563' }}>Singles:</span>
                   <span style={{ fontWeight: '700', color: '#059669' }}>${Math.max(0, property.weekly_rent_per_person - 71.80).toFixed(2)}/wk</span>
