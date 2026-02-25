@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './StaticPages.css';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const ContactPage = () => {
   const navigate = useNavigate();
@@ -12,12 +16,23 @@ const ContactPage = () => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In production, this would send to backend
-    console.log('Contact form submitted:', formData);
-    setSubmitted(true);
+    setSubmitting(true);
+    setError(null);
+    
+    try {
+      await axios.post(`${API}/contact`, formData);
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Contact form error:', err);
+      setError('Failed to send message. Please try again or email us directly.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
