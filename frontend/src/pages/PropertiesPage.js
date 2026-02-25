@@ -261,7 +261,7 @@ const PropertiesPage = () => {
                     </div>
                     <div className="property-details">
                       <h3 className="property-type">{property.property_type || 'Property'}</h3>
-                      <p className="property-address">{property.address || property.city}, {property.city}</p>
+                      <p className="property-address">{property.city}, {property.state} {property.postcode || ''}</p>
                       <div className="property-info">
                         <span>🛏 {property.available_bedrooms || '?'} available{property.total_bedrooms ? ` / ${property.total_bedrooms} total` : ''}</span>
                         {property.total_bathrooms && <span>🚿 {property.total_bathrooms} bath</span>}
