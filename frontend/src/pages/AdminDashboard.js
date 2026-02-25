@@ -154,6 +154,21 @@ const AdminDashboard = () => {
     }
   };
 
+  const updateInterestStatus = async (interestId, status) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      await axios.patch(`${API}/interests/${interestId}/status`, { status }, {
+        withCredentials: true, headers: { Authorization: `Bearer ${token}` }
+      });
+      setInterests(interests.map(i => i.interest_id === interestId ? { ...i, status } : i));
+      if (status === 'reviewed') {
+        setStats(prev => ({ ...prev, interests: Math.max(0, prev.interests - 1) }));
+      }
+    } catch (error) {
+      alert('Failed to update interest status');
+    }
+  };
+
   return (
     <div className="admin-dashboard" data-testid="admin-dashboard">
       <header className="dashboard-header">
