@@ -703,12 +703,8 @@ async def create_application(application: ApplicationCreate):
     
     await db.applications.insert_one(app_dict)
     
-    # Send confirmation email (mocked)
-    send_email_notification(
-        to_email=application.email,
-        subject="Application Received - House Sharing Seniors",
-        body=f"Dear {application.first_name},\n\nThank you for your application. We will review it and get back to you shortly.\n\nBest regards,\nHouse Sharing Seniors Team"
-    )
+    # Send confirmation email
+    await send_application_submitted_email(application.email, application.first_name)
     
     # Create audit log
     log_dict = {
