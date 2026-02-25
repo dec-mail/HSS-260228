@@ -842,6 +842,44 @@ async def get_admin_notes(application_id: str, admin: User = Depends(require_adm
     notes = await db.admin_notes.find({"application_id": application_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return notes
 
+# ============ CONTACT FORM ============
+
+class ContactFormRequest(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    subject: str
+    message: str
+
+@api_router.post("/contact")
+async def submit_contact_form(contact: ContactFormRequest):
+    """Submit contact form and send emails"""
+    try:
+        # Send to admin
+        await send_contact_form_email(
+            name=contact.name,
+            email=contact.email,
+            phone=contact.phone or "",
+            subject=contact.subject,
+            message=contact.message
+        )
+        
+        # Send confirmation to user
+        await send_contact_confirmation_email(contact.email, contact.name)
+        
+        # Store in database for records
+        contact_dict = {
+            "contact_id": f"contact_{uuid.uuid4().hex[:12]}",
+            **contact.model_dump(),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.contact_submissions.insert_one(contact_dict)
+        
+        return {"success": True, "message": "Message sent successfully"}
+    except Exception as e:
+        logger.error(f"Contact form error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to send message")
+
 # ============ INCLUDE ROUTER ============
 
 app.include_router(api_router)
