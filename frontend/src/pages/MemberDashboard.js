@@ -376,6 +376,14 @@ const MemberDashboard = () => {
                       <p className="member-date">Member since {new Date(member.created_at).toLocaleDateString()}</p>
                     </div>
                     <div className="member-actions">
+                      <button
+                        onClick={() => toggleFavorite(member.user_id, 'member')}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: isFavorited(member.user_id, 'member') ? '#ef4444' : '#d1d5db', marginRight: '8px' }}
+                        data-testid={`fav-member-btn-${member.user_id}`}
+                        title={isFavorited(member.user_id, 'member') ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        {isFavorited(member.user_id, 'member') ? '♥' : '♡'}
+                      </button>
                       {isShortlisted(member.user_id) ? (
                         <button 
                           className="btn btn-secondary" 
