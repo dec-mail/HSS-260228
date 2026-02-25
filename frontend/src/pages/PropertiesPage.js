@@ -279,6 +279,8 @@ const PropertiesPage = () => {
                           <span className="price">${property.weekly_rent_per_person}</span>
                           <span className="period">/ week per bedroom</span>
                         </div>
+                        {property.total_bedrooms && <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '2px' }}>Gross rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week ({property.total_bedrooms} bedrooms)</div>}
+                        </div>
                         <div style={{ fontSize: '12px', color: '#059669', marginTop: '4px' }}>
                           Maximum CRA:<br/>Singles ${Math.max(0, property.weekly_rent_per_person - 71.80).toFixed(2)}<br/>Couples ${Math.max(0, property.weekly_rent_per_person - 101.50).toFixed(2)}
                         </div>
