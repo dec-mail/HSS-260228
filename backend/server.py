@@ -14,6 +14,16 @@ import httpx
 import random
 import string
 
+# Import email service
+from email_service import (
+    send_access_code_email,
+    send_application_submitted_email,
+    send_application_approved_email,
+    send_application_rejected_email,
+    send_contact_form_email,
+    send_contact_confirmation_email
+)
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
