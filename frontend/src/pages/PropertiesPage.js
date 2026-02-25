@@ -282,7 +282,6 @@ const PropertiesPage = () => {
                         <div style={{ fontSize: '12px', color: '#059669', marginTop: '4px' }}>
                           After CRA: Singles ${Math.max(0, property.weekly_rent_per_person - 71.80).toFixed(2)} | Couples ${Math.max(0, property.weekly_rent_per_person - 101.50).toFixed(2)}
                         </div>
-                        </div>
                         <div className="property-actions">
                           <button 
                             className="btn btn-primary btn-sm"
