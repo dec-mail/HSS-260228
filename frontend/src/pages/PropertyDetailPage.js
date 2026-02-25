@@ -206,8 +206,8 @@ const PropertyDetailPage = () => {
               {property.total_bedrooms && <div style={{ fontSize: '16px', color: '#4b5563', fontWeight: '600', marginBottom: '8px' }}>Total rent: ${(property.weekly_rent_per_person * property.total_bedrooms).toFixed(0)}/week<br/>({property.total_bedrooms} bedrooms)</div>}
               <div className="price-amount">${property.weekly_rent_per_person}</div>
               <div className="price-period">weekly rent per bedroom</div>
-              <div style={{ marginTop: '12px', padding: '12px', background: '#eff6ff', borderRadius: '8px', fontSize: '14px' }}>
-                <div style={{ fontWeight: '600', color: '#1e40af', marginBottom: '6px' }}>After CRA (Commonwealth Rent Assistance):</div>
+              <div style={{ marginTop: '12px', padding: '12px', background: '#eff6ff', borderRadius: '8px', fontSize: '16px' }}>
+                <div style={{ fontWeight: '700', color: '#059669', marginBottom: '6px' }}>After CRA (Commonwealth Rent Assistance):</div>
                 {(() => {
                   const r = property.weekly_rent_per_person;
                   const sCRA = Math.min(71.80, Math.max(0, 0.75 * (r - 76)));
@@ -215,11 +215,11 @@ const PropertyDetailPage = () => {
                   return <>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: '#4b5563' }}>Singles:</span>
-                      <span style={{ fontWeight: '700', color: '#059669' }}>${(r - sCRA).toFixed(2)}/wk {sCRA > 0 ? `(CRA $${sCRA.toFixed(2)})` : '(no CRA)'}</span>
+                      <span style={{ fontWeight: '700', color: '#059669', fontSize: '20px' }}>${(r - sCRA).toFixed(2)}/wk</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                       <span style={{ color: '#4b5563' }}>Couples:</span>
-                      <span style={{ fontWeight: '700', color: '#059669' }}>${(r - cCRA).toFixed(2)}/wk {cCRA > 0 ? `(CRA $${cCRA.toFixed(2)})` : '(no CRA)'}</span>
+                      <span style={{ fontWeight: '700', color: '#059669', fontSize: '20px' }}>${(r - cCRA).toFixed(2)}/wk</span>
                     </div>
                   </>;
                 })()}
