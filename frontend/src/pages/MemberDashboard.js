@@ -271,6 +271,13 @@ const MemberDashboard = () => {
             My Shortlist ({shortlists.length})
           </button>
           <button
+            className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
+            onClick={() => setActiveTab('favorites')}
+            data-testid="favorites-tab"
+          >
+            Favorites ({favorites.length})
+          </button>
+          <button
             className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
             data-testid="settings-tab"
