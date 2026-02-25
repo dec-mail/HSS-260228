@@ -14,19 +14,52 @@ const PropertyDetailPage = () => {
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [showInterestModal, setShowInterestModal] = useState(false);
+  const [interestForm, setInterestForm] = useState({ message: '', phone: '' });
+  const [interestLoading, setInterestLoading] = useState(false);
+  const [interestSent, setInterestSent] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteId, setFavoriteId] = useState(null);
 
   useEffect(() => {
     fetchCurrentUser();
     fetchProperty();
   }, [propertyId]);
 
+  const getAuthConfig = () => {
+    const token = localStorage.getItem('auth_token');
+    return { withCredentials: true, headers: token ? { Authorization: `Bearer ${token}` } : {} };
+  };
+
   const fetchCurrentUser = async () => {
     try {
-      const response = await axios.get(`${API}/auth/me`, { withCredentials: true });
+      const response = await axios.get(`${API}/auth/me`, getAuthConfig());
       setCurrentUser(response.data);
+      checkFavoriteStatus(response.data.user_id);
+      checkInterestStatus(response.data.user_id);
     } catch (error) {
       console.log('Not authenticated');
     }
+  };
+
+  const checkFavoriteStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/favorites?item_type=property`, getAuthConfig());
+      const fav = response.data.find(f => f.item_id === propertyId);
+      if (fav) {
+        setIsFavorited(true);
+        setFavoriteId(fav.favorite_id);
+      }
+    } catch (e) { /* not logged in */ }
+  };
+
+  const checkInterestStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/interests/my`, getAuthConfig());
+      if (response.data.some(i => i.property_id === propertyId)) {
+        setInterestSent(true);
+      }
+    } catch (e) { /* not logged in */ }
   };
 
   const fetchProperty = async () => {
@@ -39,6 +72,43 @@ const PropertyDetailPage = () => {
       setError('Property not found');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExpressInterest = async (e) => {
+    e.preventDefault();
+    setInterestLoading(true);
+    try {
+      await axios.post(`${API}/interests`, {
+        property_id: propertyId,
+        message: interestForm.message,
+        phone: interestForm.phone
+      }, getAuthConfig());
+      setInterestSent(true);
+      setShowInterestModal(false);
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to express interest');
+    } finally {
+      setInterestLoading(false);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    try {
+      if (isFavorited && favoriteId) {
+        await axios.delete(`${API}/favorites/${favoriteId}`, getAuthConfig());
+        setIsFavorited(false);
+        setFavoriteId(null);
+      } else {
+        const response = await axios.post(`${API}/favorites`, {
+          item_id: propertyId,
+          item_type: 'property'
+        }, getAuthConfig());
+        setIsFavorited(true);
+        setFavoriteId(response.data.favorite?.favorite_id);
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
     }
   };
 
@@ -76,7 +146,7 @@ const PropertyDetailPage = () => {
       <div className="detail-header">
         <div className="container">
           <button className="back-btn" onClick={() => navigate('/properties')} data-testid="back-btn">
-            ← Back to Properties
+            &larr; Back to Properties
           </button>
         </div>
       </div>
@@ -111,9 +181,25 @@ const PropertyDetailPage = () => {
 
           {/* Property Info */}
           <div className="property-info-section">
-            <div className="property-type-badge">{property.property_type}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div className="property-type-badge">{property.property_type}</div>
+              {currentUser && (
+                <button
+                  onClick={toggleFavorite}
+                  style={{
+                    background: 'none', border: '2px solid ' + (isFavorited ? '#ef4444' : '#d1d5db'),
+                    borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', fontSize: '18px',
+                    color: isFavorited ? '#ef4444' : '#9ca3af', transition: 'all 0.2s'
+                  }}
+                  data-testid="favorite-btn"
+                  title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {isFavorited ? '♥' : '♡'} {isFavorited ? 'Saved' : 'Save'}
+                </button>
+              )}
+            </div>
             <h1 className="property-title" data-testid="property-title">
-              {property.address}
+              {property.address || `${property.city}, ${property.state}`}
             </h1>
             <p className="property-location">{property.city}, {property.state} {property.postcode}</p>
 
@@ -124,21 +210,21 @@ const PropertyDetailPage = () => {
 
             <div className="property-highlights">
               <div className="highlight-item">
-                <span className="highlight-icon">🛏</span>
+                <span className="highlight-icon">Bed</span>
                 <div className="highlight-text">
                   <strong>{property.available_bedrooms || '-'}</strong>
                   <span>bedrooms available</span>
                 </div>
               </div>
               <div className="highlight-item">
-                <span className="highlight-icon">🏠</span>
+                <span className="highlight-icon">Home</span>
                 <div className="highlight-text">
                   <strong>{property.total_bedrooms || '-'}</strong>
                   <span>total bedrooms</span>
                 </div>
               </div>
               <div className="highlight-item">
-                <span className="highlight-icon">🚿</span>
+                <span className="highlight-icon">Bath</span>
                 <div className="highlight-text">
                   <strong>{property.total_bathrooms || '-'}</strong>
                   <span>bathrooms</span>
@@ -148,9 +234,19 @@ const PropertyDetailPage = () => {
 
             {currentUser && (
               <div className="property-actions">
-                <button className="btn btn-primary btn-large contact-btn" data-testid="contact-btn">
-                  Express Interest
-                </button>
+                {interestSent ? (
+                  <button className="btn btn-secondary btn-large" disabled data-testid="interest-sent-btn">
+                    Interest Sent
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-primary btn-large contact-btn"
+                    onClick={() => setShowInterestModal(true)}
+                    data-testid="express-interest-btn"
+                  >
+                    Express Interest
+                  </button>
+                )}
                 {(currentUser.user_id === property.added_by_user_id || currentUser.role === 'admin') && (
                   <button 
                     className="btn btn-secondary" 
@@ -172,7 +268,6 @@ const PropertyDetailPage = () => {
 
         {/* Details Sections */}
         <div className="details-sections">
-          {/* Description */}
           {property.description && (
             <div className="detail-section">
               <h2>About This Property</h2>
@@ -180,14 +275,13 @@ const PropertyDetailPage = () => {
             </div>
           )}
 
-          {/* Amenities */}
           {property.amenities && property.amenities.length > 0 && (
             <div className="detail-section">
               <h2>Amenities</h2>
               <div className="amenities-grid">
                 {property.amenities.map((amenity, index) => (
                   <div key={index} className="amenity-item">
-                    <span className="amenity-check">✓</span>
+                    <span className="amenity-check">&#10003;</span>
                     <span>{amenity}</span>
                   </div>
                 ))}
@@ -195,7 +289,6 @@ const PropertyDetailPage = () => {
             </div>
           )}
 
-          {/* House Rules */}
           {property.house_rules && (
             <div className="detail-section">
               <h2>House Rules</h2>
@@ -203,7 +296,6 @@ const PropertyDetailPage = () => {
             </div>
           )}
 
-          {/* Additional Info */}
           <div className="detail-section">
             <h2>Additional Information</h2>
             <div className="info-grid">
@@ -235,6 +327,53 @@ const PropertyDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Express Interest Modal */}
+      {showInterestModal && (
+        <div className="modal-overlay" onClick={() => setShowInterestModal(false)} data-testid="interest-modal-overlay">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} data-testid="interest-modal">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: '#1a2332' }}>Express Interest</h2>
+              <button onClick={() => setShowInterestModal(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#6b7280' }}>&times;</button>
+            </div>
+            <p style={{ color: '#6b7280', marginBottom: '20px' }}>
+              Let us know you're interested in <strong>{property.address || `${property.city}, ${property.state}`}</strong>. The admin team will be notified.
+            </p>
+            <form onSubmit={handleExpressInterest}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Your Phone (optional)</label>
+                <input
+                  type="tel"
+                  value={interestForm.phone}
+                  onChange={(e) => setInterestForm({...interestForm, phone: e.target.value})}
+                  placeholder="e.g. 0412 345 678"
+                  style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                  data-testid="interest-phone-input"
+                />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Message (optional)</label>
+                <textarea
+                  value={interestForm.message}
+                  onChange={(e) => setInterestForm({...interestForm, message: e.target.value})}
+                  placeholder="Tell us why you're interested in this property..."
+                  rows={4}
+                  style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', resize: 'vertical', boxSizing: 'border-box' }}
+                  data-testid="interest-message-input"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn btn-primary" disabled={interestLoading} style={{ flex: 1 }} data-testid="interest-submit-btn">
+                  {interestLoading ? 'Sending...' : 'Send Interest'}
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowInterestModal(false)} style={{ flex: 1 }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
