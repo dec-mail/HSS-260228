@@ -25,11 +25,7 @@ const LandingPage = () => {
               </button>
               <button 
                 className="btn btn-secondary" 
-                onClick={() => {
-                  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-                  const redirectUrl = window.location.origin + '/dashboard';
-                  window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
-                }}
+                onClick={() => navigate('/login')}
                 data-testid="header-login-btn"
               >
                 Login
