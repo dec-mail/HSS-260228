@@ -488,12 +488,9 @@ async def submit_application_final(request: Request):
     # Delete draft
     await db.draft_applications.delete_one({"email": email, "access_code": access_code.upper()})
     
-    # Send confirmation email (mocked)
-    send_email_notification(
-        to_email=email,
-        subject="Application Submitted - House Sharing Seniors",
-        body=f"Thank you for your application. We will review it and get back to you shortly."
-    )
+    # Send confirmation email (REAL EMAIL via Resend)
+    applicant_name = body.get("given_name", "Applicant")
+    await send_application_submitted_email(email, applicant_name)
     
     # Create audit log
     log_dict = {
