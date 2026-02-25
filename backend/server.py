@@ -18,6 +18,8 @@ import aiofiles
 import shutil
 import bcrypt
 import jwt
+import cloudinary
+import cloudinary.uploader
 
 # Import email service
 from email_service import (
