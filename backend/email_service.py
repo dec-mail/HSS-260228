@@ -110,8 +110,9 @@ async def send_application_submitted_email(to_email: str, applicant_name: str) -
     return await send_email(to_email, subject, html_content)
 
 
-async def send_application_approved_email(to_email: str, applicant_name: str) -> dict:
+async def send_application_approved_email(to_email: str, applicant_name: str, frontend_url: str = "") -> dict:
     """Send email when application is approved"""
+    register_link = f"{frontend_url}/login?register=true&email={to_email}" if frontend_url else "#"
     subject = "Congratulations! Your Application is Approved - House Sharing Seniors"
     html_content = f"""
     <!DOCTYPE html>
@@ -129,16 +130,17 @@ async def send_application_approved_email(to_email: str, applicant_name: str) ->
             <div style="background: #d1fae5; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
                 <p style="margin: 0; font-size: 18px; color: #065f46;"><strong>Welcome to the Community!</strong></p>
             </div>
-            <p><strong>What you can do now:</strong></p>
-            <ul style="color: #4b5563;">
-                <li>Log in to your Member Dashboard to browse other members</li>
-                <li>View and shortlist potential housemates</li>
-                <li>Browse available properties in your area</li>
-                <li>Update your profile preferences</li>
-            </ul>
+            <p><strong>Your next step:</strong> Create your account to start using the platform. Click the button below — your email will be pre-filled.</p>
             <div style="text-align: center; margin: 30px 0;">
-                <a href="https://housesharingseniors.com.au/dashboard" style="background: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold;">Go to Dashboard</a>
+                <a href="{register_link}" style="background: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Create Your Account</a>
             </div>
+            <p><strong>Once registered, you can:</strong></p>
+            <ul style="color: #4b5563;">
+                <li>Browse and shortlist potential housemates</li>
+                <li>View available properties in your area</li>
+                <li>Express interest in properties</li>
+                <li>Save your favourite properties and members</li>
+            </ul>
             <p style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
                 Questions? Contact us at info@housesharingseniors.com.au or call 1800 HSS AUS (1800 477 287)
             </p>
