@@ -988,7 +988,8 @@ async def update_application_status(
     # Send notification email (REAL EMAIL via Resend)
     applicant_name = app_doc.get('given_name', app_doc.get('first_name', 'Applicant'))
     if status == "approved":
-        await send_application_approved_email(app_doc["email"], applicant_name)
+        frontend_url = os.environ.get("FRONTEND_URL", "")
+        await send_application_approved_email(app_doc["email"], applicant_name, frontend_url)
     else:
         await send_application_rejected_email(app_doc["email"], applicant_name)
     
