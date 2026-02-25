@@ -396,6 +396,79 @@ const MemberDashboard = () => {
             )}
           </div>
         )}
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="settings-section" data-testid="settings-section">
+            <div className="section-header">
+              <h2>Account Settings</h2>
+              <p>Manage your account preferences</p>
+            </div>
+
+            <div style={{ maxWidth: '500px' }}>
+              <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1a2332' }}>Change Password</h3>
+
+                {passwordMessage && (
+                  <div style={{ background: '#d1fae5', border: '1px solid #059669', borderRadius: '8px', padding: '12px', color: '#065f46', marginBottom: '16px' }} data-testid="password-success-msg">
+                    {passwordMessage}
+                  </div>
+                )}
+                {passwordError && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #ef4444', borderRadius: '8px', padding: '12px', color: '#b91c1c', marginBottom: '16px' }} data-testid="password-error-msg">
+                    {passwordError}
+                  </div>
+                )}
+
+                <form onSubmit={handleChangePassword}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Current Password</label>
+                    <input
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                      data-testid="current-password-input"
+                    />
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>New Password</label>
+                    <input
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                      required
+                      minLength={6}
+                      style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                      data-testid="new-password-input"
+                    />
+                  </div>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                      required
+                      minLength={6}
+                      style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                      data-testid="confirm-new-password-input"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={passwordLoading}
+                    style={{ padding: '12px 24px' }}
+                    data-testid="change-password-submit"
+                  >
+                    {passwordLoading ? 'Changing...' : 'Change Password'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
