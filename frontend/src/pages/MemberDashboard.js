@@ -855,10 +855,115 @@ const MemberDashboard = () => {
           <div className="settings-section" data-testid="settings-section">
             <div className="section-header">
               <h2>Account Settings</h2>
-              <p>Manage your account preferences</p>
+              <p>Manage your profile, notifications, and password</p>
             </div>
 
-            <div style={{ maxWidth: '500px' }}>
+            <div style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+              {/* Profile Section */}
+              <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1a2332' }}>Profile</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                  <div style={{ position: 'relative' }}>
+                    {currentUser?.avatar_url ? (
+                      <img src={currentUser.avatar_url} alt="Avatar" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e5e7eb' }} />
+                    ) : (
+                      <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '700', color: '#6b7280' }}>
+                        {currentUser?.name?.[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <label style={{ position: 'absolute', bottom: '-4px', right: '-4px', background: '#2563eb', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '12px', border: '2px solid white' }}>
+                      <i className="fa fa-camera" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          try {
+                            const res = await axios.post(`${API}/users/avatar`, formData, {
+                              ...getAuthConfig(),
+                              headers: { ...getAuthConfig().headers, 'Content-Type': 'multipart/form-data' }
+                            });
+                            setCurrentUser(prev => ({ ...prev, avatar_url: res.data.avatar_url }));
+                            alert('Avatar updated!');
+                          } catch (err) { alert(err.response?.data?.detail || 'Upload failed'); }
+                        }}
+                        data-testid="avatar-upload-input"
+                      />
+                    </label>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '16px', color: '#1a2332' }}>{currentUser?.name}</div>
+                    <div style={{ fontSize: '13px', color: '#6b7280' }}>@{currentUser?.username || 'no-username'}</div>
+                  </div>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Display Name</label>
+                  <input
+                    type="text"
+                    defaultValue={currentUser?.display_name || ''}
+                    placeholder="How you appear to other members"
+                    onBlur={async (e) => {
+                      const val = e.target.value.trim();
+                      try {
+                        const res = await axios.patch(`${API}/users/profile`, { display_name: val }, getAuthConfig());
+                        setCurrentUser(prev => ({ ...prev, display_name: res.data.display_name }));
+                      } catch (err) { /* silent */ }
+                    }}
+                    style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                    data-testid="display-name-input"
+                  />
+                  <span style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px', display: 'block' }}>Leave blank to use your username publicly</span>
+                </div>
+              </div>
+
+              {/* Notification Preferences */}
+              <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1a2332' }}>Notification Preferences</h3>
+                {[
+                  { key: 'push', label: 'In-App Notifications', desc: 'Bell icon alerts in the dashboard' },
+                  { key: 'email', label: 'Email Notifications', desc: 'Receive email for important updates' },
+                  { key: 'sms', label: 'SMS Notifications', desc: 'Text messages for urgent alerts (coming soon)' }
+                ].map(({ key, label, desc }) => (
+                  <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#1a2332' }}>{label}</div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>{desc}</div>
+                    </div>
+                    <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={currentUser?.notification_prefs?.[key] ?? (key !== 'sms')}
+                        onChange={async (e) => {
+                          const newPrefs = { ...(currentUser?.notification_prefs || { email: true, sms: false, push: true }), [key]: e.target.checked };
+                          try {
+                            await axios.patch(`${API}/users/profile`, { notification_prefs: newPrefs }, getAuthConfig());
+                            setCurrentUser(prev => ({ ...prev, notification_prefs: newPrefs }));
+                          } catch (err) { /* silent */ }
+                        }}
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                        data-testid={`notif-toggle-${key}`}
+                      />
+                      <span style={{
+                        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                        background: (currentUser?.notification_prefs?.[key] ?? (key !== 'sms')) ? '#2563eb' : '#d1d5db',
+                        borderRadius: '12px', transition: 'background 0.2s'
+                      }}>
+                        <span style={{
+                          position: 'absolute', content: '""', height: '18px', width: '18px', left: (currentUser?.notification_prefs?.[key] ?? (key !== 'sms')) ? '22px' : '3px',
+                          bottom: '3px', background: 'white', borderRadius: '50%', transition: 'left 0.2s'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+
+              {/* Change Password */}
               <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ margin: '0 0 20px 0', color: '#1a2332' }}>Change Password</h3>
 
