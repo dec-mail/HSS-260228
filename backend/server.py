@@ -344,6 +344,81 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
+# ============ USERNAME & NOTIFICATION HELPERS ============
+
+async def generate_username(name: str) -> str:
+    """Generate username: GivenNameN e.g. JaneD, JaneD2"""
+    parts = name.strip().split()
+    given = parts[0] if parts else "User"
+    last_initial = parts[-1][0].upper() if len(parts) > 1 else ""
+    base = f"{given}{last_initial}"
+    base = re.sub(r'[^A-Za-z0-9]', '', base)
+    # Check uniqueness
+    candidate = base
+    counter = 2
+    while await db.users.find_one({"username": candidate}):
+        candidate = f"{base}{counter}"
+        counter += 1
+    return candidate
+
+async def create_notification(user_id: str, notif_type: str, title: str, message: str, link: str = ""):
+    """Create in-app notification + optional email/SMS"""
+    now = datetime.now(timezone.utc).isoformat()
+    notif = {
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "type": notif_type,
+        "title": title,
+        "message": message,
+        "link": link,
+        "read": False,
+        "created_at": now
+    }
+    await db.notifications.insert_one(notif)
+    # Send email notification if user opted in
+    try:
+        user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        if user_doc:
+            prefs = user_doc.get("notification_prefs") or {}
+            if prefs.get("email", True):
+                from email_service import send_email
+                await send_email(
+                    user_doc["email"],
+                    f"[HSS] {title}",
+                    f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">'
+                    f'<div style="background:#2563eb;padding:20px;text-align:center;border-radius:12px 12px 0 0;">'
+                    f'<h1 style="color:white;margin:0;font-size:20px;">House Sharing Seniors</h1></div>'
+                    f'<div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">'
+                    f'<h2 style="color:#1a2332;margin-top:0;">{title}</h2>'
+                    f'<p style="color:#4b5563;">{message}</p>'
+                    f'{"<a href=" + repr(link) + " style=" + repr("color:#2563eb;font-weight:600;") + ">View Details</a>" if link else ""}'
+                    f'</div></div>'
+                )
+            if prefs.get("sms", False):
+                await send_sms_notification(user_doc.get("phone"), message)
+    except Exception as e:
+        logger.error(f"Notification delivery error: {e}")
+
+async def send_sms_notification(phone: str, message: str):
+    """Send SMS via Twilio (stubbed — needs TWILIO env vars)"""
+    account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+    auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+    from_number = os.environ.get("TWILIO_PHONE_NUMBER")
+    if not all([account_sid, auth_token, from_number, phone]):
+        logger.info(f"SMS skipped (Twilio not configured): {message[:50]}")
+        return
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json",
+                auth=(account_sid, auth_token),
+                data={"To": phone, "From": from_number, "Body": f"[HSS] {message}"}
+            )
+        logger.info(f"SMS sent to {phone}")
+    except Exception as e:
+        logger.error(f"SMS send failed: {e}")
+
 # ============ ROUTES ============
 
 @api_router.get("/")
