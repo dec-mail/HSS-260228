@@ -223,6 +223,23 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Community Chat */}
+      <section className="community-chat-section" style={{ padding: '60px 0', background: '#f0f7ff' }} data-testid="community-chat-section">
+        <div className="container">
+          <h2 className="section-title" data-testid="community-chat-title">Community Chat</h2>
+          <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '24px' }}>Chat with other members and get to know the community</p>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <ChatBox
+              channelType="community"
+              channelId="community"
+              currentUser={currentUser}
+              title="Community Chat"
+              height="420px"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="landing-footer">
         <div className="container">
