@@ -351,9 +351,12 @@ const MemberDashboard = () => {
                 {currentUser && <p className="welcome-text">Welcome, {currentUser.name}!</p>}
               </div>
             </div>
-            <button className="btn btn-secondary" onClick={handleLogout} data-testid="logout-btn">
-              Logout
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <NotificationBell />
+              <button className="btn btn-secondary" onClick={handleLogout} data-testid="logout-btn">
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
