@@ -450,19 +450,20 @@ async def register(req: RegisterRequest, response: Response):
         raise HTTPException(status_code=400, detail="An account with this email already exists. Please login instead.")
     
     now = datetime.now(timezone.utc).isoformat()
+    username = await generate_username(req.name)
     
     if existing:
         # User doc was created during approval but has no password - update it
-        await db.users.update_one(
-            {"email": req.email},
-            {"$set": {
-                "password_hash": hash_password(req.password),
-                "name": req.name,
-                "application_id": approved_app.get("application_id")
-            }}
-        )
+        update_fields = {
+            "password_hash": hash_password(req.password),
+            "name": req.name,
+            "application_id": approved_app.get("application_id")
+        }
+        if not existing.get("username"):
+            update_fields["username"] = username
+        await db.users.update_one({"email": req.email}, {"$set": update_fields})
         user_id = existing["user_id"]
-        user_doc = {**existing, "name": req.name, "application_id": approved_app.get("application_id")}
+        user_doc = {**existing, "name": req.name, "username": existing.get("username") or username, "application_id": approved_app.get("application_id")}
     else:
         # No user doc exists yet - create one
         user_id = f"user_{uuid.uuid4().hex[:12]}"
@@ -470,6 +471,7 @@ async def register(req: RegisterRequest, response: Response):
             "user_id": user_id,
             "email": req.email,
             "name": req.name,
+            "username": username,
             "password_hash": hash_password(req.password),
             "picture": None,
             "role": "member",
