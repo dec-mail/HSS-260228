@@ -84,8 +84,12 @@ class User(BaseModel):
     user_id: str
     email: EmailStr
     name: str
+    username: Optional[str] = None
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
     picture: Optional[str] = None
     role: Literal["admin", "member"] = "member"
+    notification_prefs: Optional[dict] = None
     created_at: str
 
 class UserSession(BaseModel):
