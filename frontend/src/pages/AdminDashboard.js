@@ -499,6 +499,87 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+
+        {/* Group Applications Tab */}
+        {activeTab === 'group-apps' && (
+          <div className="dashboard-content" data-testid="group-apps-section">
+            <div className="section-header">
+              <h2>Group Applications ({groupApplications.length})</h2>
+              <p>Review group applications for properties</p>
+            </div>
+            {groupApplications.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>No group applications yet.</div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Group</th>
+                    <th>Property</th>
+                    <th>Members</th>
+                    <th>Submitted By</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupApplications.map(app => (
+                    <tr key={app.application_id} data-testid={`group-app-row-${app.application_id}`}>
+                      <td><strong>{app.group_name}</strong></td>
+                      <td>{app.property_city}, {app.property_state}</td>
+                      <td>{app.members?.length || 0} members</td>
+                      <td>{app.submitted_by_name}</td>
+                      <td>{new Date(app.created_at).toLocaleDateString()}</td>
+                      <td>
+                        <span style={{
+                          padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600',
+                          background: app.status === 'approved' ? '#d1fae5' : app.status === 'rejected' ? '#fef2f2' : '#fef3c7',
+                          color: app.status === 'approved' ? '#059669' : app.status === 'rejected' ? '#ef4444' : '#d97706'
+                        }}>
+                          {app.status}
+                        </span>
+                      </td>
+                      <td>
+                        {app.status === 'pending' && (
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              className="btn btn-primary"
+                              style={{ padding: '4px 12px', fontSize: '12px' }}
+                              onClick={async () => {
+                                const token = localStorage.getItem('auth_token');
+                                try {
+                                  await axios.patch(`${API}/group-applications/${app.application_id}/status`, { status: 'approved' }, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } });
+                                  fetchAllData();
+                                } catch (e) { alert('Failed to approve'); }
+                              }}
+                              data-testid={`approve-group-app-${app.application_id}`}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: '4px 12px', fontSize: '12px', color: '#ef4444' }}
+                              onClick={async () => {
+                                const token = localStorage.getItem('auth_token');
+                                try {
+                                  await axios.patch(`${API}/group-applications/${app.application_id}/status`, { status: 'rejected' }, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } });
+                                  fetchAllData();
+                                } catch (e) { alert('Failed to reject'); }
+                              }}
+                              data-testid={`reject-group-app-${app.application_id}`}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
