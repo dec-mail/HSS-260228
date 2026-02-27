@@ -1060,13 +1060,17 @@ async def update_application_status(
     if status == "approved":
         existing_user = await db.users.find_one({"email": app_doc["email"]}, {"_id": 0})
         if not existing_user:
+            full_name = f"{app_doc.get('given_name', app_doc.get('first_name', ''))} {app_doc.get('family_name', app_doc.get('last_name', ''))}"
+            username = await generate_username(full_name)
             user_id = f"user_{uuid.uuid4().hex[:12]}"
             user_dict = {
                 "user_id": user_id,
                 "email": app_doc["email"],
-                "name": f"{app_doc.get('given_name', app_doc.get('first_name', ''))} {app_doc.get('family_name', app_doc.get('last_name', ''))}",
+                "name": full_name,
+                "username": username,
                 "picture": None,
                 "role": "member",
+                "notification_prefs": {"email": True, "sms": False, "push": True},
                 "created_at": now
             }
             await db.users.insert_one(user_dict)
