@@ -17,12 +17,20 @@ Build `housesharingeniors.com.au`, a platform for seniors to find shared housing
 - Express Interest on properties (modal + admin email + Inquiries tab)
 - User Favorites (properties + members)
 - **Property-Centric Groups** (create, join, leave, waitlist, delete) — tied to specific properties
-- Unique `property_code` per property in `STATE-SUB-STR-NUM` format (e.g., QLD-KUR-SAI-44)
-- Groups UI on Property Detail Page (create group modal, join/leave/delete groups)
-- Groups tab in Member Dashboard showing all groups with property links
-- In-app Messaging (conversations, real-time chat UI)
+- Unique `property_code` per property in `STATE-SUB-STR-NUM` format
+- Groups UI on Property Detail Page (create group modal, join/leave/delete)
+- Groups tab in Member Dashboard
+- **Community Chat** — site-wide chat on Home Page + Member Dashboard
+- **Group Chat** — per-group chat on Property Detail Page (each group has its own chat)
+- In-app Messaging (1-to-1 conversations)
 - Member Profile Pages (from application data)
 - Static pages: About, Contact, FAQ, Privacy, Terms, etc.
+
+## Chat Architecture
+- `chat_messages` collection with `channel_type` ("community" / "group") + `channel_id`
+- Community: public read, auth-required write
+- Group: auth + membership required for read/write
+- Reusable `ChatBox` component with 5-second polling
 
 ## CRA Formula
 - Singles: min($71.80, 0.75 × max(0, rent - $76.00))
@@ -34,8 +42,7 @@ Build `housesharingeniors.com.au`, a platform for seniors to find shared housing
 
 ## Remaining Backlog
 - P1: User Profile enhancements (usernames, avatars, display_name)
-- P1: Property-group application flow (group applies collectively for a property)
+- P1: Property-group application flow (group applies collectively)
 - P2: Email/in-app notifications for group events
 - P2: Security hardening (rate limiting, input sanitization)
 - P3: Custom domain, DB backups, production deployment
-- Nice: Admin bulk property actions, advanced member search
