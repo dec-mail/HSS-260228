@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ChatBox from '../components/ChatBox';
+import NotificationBell from '../components/NotificationBell';
 import './MemberDashboard.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
