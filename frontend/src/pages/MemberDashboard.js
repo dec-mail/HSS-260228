@@ -188,23 +188,11 @@ const MemberDashboard = () => {
     } catch (e) { console.error('Failed to fetch groups:', e); }
   };
 
-  const createGroup = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${API}/groups`, groupForm, getAuthConfig());
-      setGroupForm({ name: '', description: '', housing_preference: '' });
-      setShowCreateGroup(false);
-      fetchGroups();
-    } catch (error) {
-      alert(error.response?.data?.detail || 'Failed to create group');
-    }
-  };
-
   const joinGroup = async (groupId) => {
     try {
       await axios.post(`${API}/groups/${groupId}/join`, {}, getAuthConfig());
       fetchGroups();
-    } catch (error) { alert('Failed to join group'); }
+    } catch (error) { alert(error.response?.data?.detail || 'Failed to join group'); }
   };
 
   const leaveGroup = async (groupId) => {
