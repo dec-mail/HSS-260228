@@ -396,6 +396,13 @@ const MemberDashboard = () => {
             Messages {unreadCount > 0 && <span style={{ background: '#ef4444', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '12px', marginLeft: '4px' }}>{unreadCount}</span>}
           </button>
           <button
+            className={`tab-btn ${activeTab === 'community' ? 'active' : ''}`}
+            onClick={() => setActiveTab('community')}
+            data-testid="community-tab"
+          >
+            Community Chat
+          </button>
+          <button
             className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
             data-testid="settings-tab"
