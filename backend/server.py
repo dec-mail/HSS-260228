@@ -1332,26 +1332,50 @@ async def remove_favorite(favorite_id: str, user: User = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Favorite not found")
     return {"message": "Removed from favorites"}
 
-# ============ GROUPS ROUTES ============
+# ============ PROPERTY GROUPS ROUTES ============
 
-class CreateGroupRequest(BaseModel):
-    name: str
-    description: Optional[str] = ""
-    housing_preference: Optional[str] = ""
+class CreatePropertyGroupRequest(BaseModel):
+    property_id: str
+    name: Optional[str] = ""
+    group_type: Optional[str] = ""  # Couples/SingleFemale/SingleMale/Mixed
+    is_couple: Optional[bool] = False  # Creator is a couple (counts as 1 spot)
 
 @api_router.post("/groups")
-async def create_group(req: CreateGroupRequest, user: User = Depends(get_current_user)):
-    """Create a new group"""
-    group_id = f"grp_{uuid.uuid4().hex[:12]}"
+async def create_property_group(req: CreatePropertyGroupRequest, user: User = Depends(get_current_user)):
+    """Create a new group tied to a property"""
+    # Verify property exists
+    prop = await db.properties.find_one({"property_id": req.property_id}, {"_id": 0})
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    max_spots = prop.get("total_bedrooms") or prop.get("available_bedrooms") or 4
+    
+    # Auto-generate group name: PropertyCity-GroupLetter
+    existing_groups = await db.groups.find({"property_id": req.property_id}).to_list(100)
+    letter = chr(65 + len(existing_groups))  # A, B, C...
+    city_short = prop.get("city", "HSS")[:10].replace(" ", "")
+    auto_name = f"{city_short}-{letter}"
+    
     now = datetime.now(timezone.utc).isoformat()
     group_doc = {
-        "group_id": group_id,
-        "name": req.name,
-        "description": req.description,
-        "housing_preference": req.housing_preference,
+        "group_id": f"grp_{uuid.uuid4().hex[:8]}",
+        "property_id": req.property_id,
+        "property_city": prop.get("city", ""),
+        "property_state": prop.get("state", ""),
+        "property_rent": prop.get("weekly_rent_per_person", 0),
+        "name": req.name or auto_name,
+        "group_type": req.group_type or "Mixed",
+        "status": "vacancies",
+        "max_spots": max_spots,
         "created_by": user.user_id,
         "creator_name": user.name,
-        "members": [{"user_id": user.user_id, "name": user.name, "joined_at": now}],
+        "members": [{
+            "user_id": user.user_id,
+            "name": user.name,
+            "is_couple": req.is_couple,
+            "joined_at": now
+        }],
+        "waitlist": [],
         "created_at": now
     }
     await db.groups.insert_one(group_doc)
@@ -1359,9 +1383,18 @@ async def create_group(req: CreateGroupRequest, user: User = Depends(get_current
     return group_doc
 
 @api_router.get("/groups")
-async def list_groups(user: User = Depends(get_current_user)):
-    """List all groups"""
-    groups = await db.groups.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+async def list_groups(user: User = Depends(get_current_user), property_id: Optional[str] = None):
+    """List groups, optionally filtered by property"""
+    query = {}
+    if property_id:
+        query["property_id"] = property_id
+    groups = await db.groups.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    # Add computed fields
+    for g in groups:
+        occupied = len(g.get("members", []))
+        g["spots_taken"] = occupied
+        g["spots_available"] = max(0, g.get("max_spots", 4) - occupied)
+        g["waitlist_count"] = len(g.get("waitlist", []))
     return groups
 
 @api_router.get("/groups/{group_id}")
@@ -1370,34 +1403,123 @@ async def get_group(group_id: str, user: User = Depends(get_current_user)):
     group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
+    occupied = len(group.get("members", []))
+    group["spots_taken"] = occupied
+    group["spots_available"] = max(0, group.get("max_spots", 4) - occupied)
     return group
 
 @api_router.post("/groups/{group_id}/join")
-async def join_group(group_id: str, user: User = Depends(get_current_user)):
-    """Join a group"""
+async def join_group(group_id: str, request: Request, user: User = Depends(get_current_user)):
+    """Join a property group or get waitlisted"""
+    body = await request.json() if request.headers.get("content-type") == "application/json" else {}
+    is_couple = body.get("is_couple", False)
+    
     group = await db.groups.find_one({"group_id": group_id})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
-    if any(m["user_id"] == user.user_id for m in group.get("members", [])):
-        return {"message": "Already a member of this group"}
+    
+    # Check not already member or waitlisted
+    all_user_ids = [m["user_id"] for m in group.get("members", [])] + [w["user_id"] for w in group.get("waitlist", [])]
+    if user.user_id in all_user_ids:
+        return {"message": "Already in this group or waitlisted"}
+    
     now = datetime.now(timezone.utc).isoformat()
-    await db.groups.update_one(
-        {"group_id": group_id},
-        {"$push": {"members": {"user_id": user.user_id, "name": user.name, "joined_at": now}}}
-    )
-    return {"message": "Joined group successfully"}
+    member_entry = {"user_id": user.user_id, "name": user.name, "is_couple": is_couple, "joined_at": now}
+    
+    max_spots = group.get("max_spots", 4)
+    current_members = len(group.get("members", []))
+    
+    if current_members < max_spots:
+        # Add as member
+        await db.groups.update_one({"group_id": group_id}, {"$push": {"members": member_entry}})
+        new_count = current_members + 1
+        if new_count >= max_spots:
+            await db.groups.update_one({"group_id": group_id}, {"$set": {"status": "full"}})
+        return {"message": "Joined group", "position": "member"}
+    else:
+        # Add to waitlist
+        await db.groups.update_one({"group_id": group_id}, {"$push": {"waitlist": member_entry}})
+        waitlist_pos = len(group.get("waitlist", [])) + 1
+        return {"message": f"Group is full. Added to waitlist (position {waitlist_pos})", "position": "waitlist"}
 
 @api_router.post("/groups/{group_id}/leave")
 async def leave_group(group_id: str, user: User = Depends(get_current_user)):
-    """Leave a group"""
+    """Leave a group — auto-promotes from waitlist"""
     group = await db.groups.find_one({"group_id": group_id})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
-    await db.groups.update_one(
-        {"group_id": group_id},
-        {"$pull": {"members": {"user_id": user.user_id}}}
-    )
+    
+    was_member = any(m["user_id"] == user.user_id for m in group.get("members", []))
+    
+    # Remove from members or waitlist
+    await db.groups.update_one({"group_id": group_id}, {"$pull": {"members": {"user_id": user.user_id}}})
+    await db.groups.update_one({"group_id": group_id}, {"$pull": {"waitlist": {"user_id": user.user_id}}})
+    
+    # Auto-promote from waitlist if a member left
+    if was_member and group.get("waitlist"):
+        promoted = group["waitlist"][0]
+        await db.groups.update_one(
+            {"group_id": group_id},
+            {"$push": {"members": promoted}, "$pull": {"waitlist": {"user_id": promoted["user_id"]}}, "$set": {"status": "vacancies"}}
+        )
+        # TODO: send notification to promoted user
+    elif was_member:
+        await db.groups.update_one({"group_id": group_id}, {"$set": {"status": "vacancies"}})
+    
     return {"message": "Left group"}
+
+@api_router.post("/groups/{group_id}/invite")
+async def invite_to_group(group_id: str, request: Request, user: User = Depends(get_current_user)):
+    """Invite another user to a group"""
+    body = await request.json()
+    invite_user_id = body.get("user_id")
+    if not invite_user_id:
+        raise HTTPException(status_code=400, detail="user_id required")
+    
+    group = await db.groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check inviter is a member
+    if not any(m["user_id"] == user.user_id for m in group.get("members", [])):
+        raise HTTPException(status_code=403, detail="Only group members can invite")
+    
+    invited_user = await db.users.find_one({"user_id": invite_user_id}, {"_id": 0})
+    if not invited_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Send in-app message as invitation
+    now = datetime.now(timezone.utc).isoformat()
+    pair = sorted([user.user_id, invite_user_id])
+    conversation_id = f"conv_{pair[0]}_{pair[1]}"
+    
+    prop = await db.properties.find_one({"property_id": group["property_id"]}, {"_id": 0})
+    prop_name = f"{prop.get('city', '')}, {prop.get('state', '')}" if prop else "a property"
+    
+    msg_doc = {
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "conversation_id": conversation_id,
+        "from_user_id": user.user_id,
+        "from_name": user.name,
+        "to_user_id": invite_user_id,
+        "to_name": invited_user.get("name", ""),
+        "content": f"You're invited to join group '{group['name']}' for {prop_name}! Go to the property page to join.",
+        "read": False,
+        "created_at": now
+    }
+    await db.messages.insert_one(msg_doc)
+    
+    return {"message": f"Invitation sent to {invited_user.get('name', 'user')}"}
+
+@api_router.patch("/groups/{group_id}/status")
+async def update_group_status(group_id: str, request: Request, admin: User = Depends(require_admin)):
+    """Admin: update group status"""
+    body = await request.json()
+    new_status = body.get("status")
+    if new_status not in ("vacancies", "full", "fulfilled", "on_hold"):
+        raise HTTPException(status_code=400, detail="Invalid status")
+    await db.groups.update_one({"group_id": group_id}, {"$set": {"status": new_status}})
+    return {"message": f"Group status updated to {new_status}"}
 
 @api_router.delete("/groups/{group_id}")
 async def delete_group(group_id: str, user: User = Depends(get_current_user)):
@@ -1406,7 +1528,7 @@ async def delete_group(group_id: str, user: User = Depends(get_current_user)):
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     if group["created_by"] != user.user_id and user.role != "admin":
-        raise HTTPException(status_code=403, detail="Only the group creator or admin can delete this group")
+        raise HTTPException(status_code=403, detail="Only the group creator or admin can delete")
     await db.groups.delete_one({"group_id": group_id})
     return {"message": "Group deleted"}
 
