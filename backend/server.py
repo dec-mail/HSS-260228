@@ -1542,6 +1542,14 @@ async def join_group(group_id: str, request: Request, user: User = Depends(get_c
         new_count = current_members + 1
         if new_count >= max_spots:
             await db.groups.update_one({"group_id": group_id}, {"$set": {"status": "full"}})
+        # Notify existing members
+        for m in group.get("members", []):
+            await create_notification(
+                m["user_id"], "group_join",
+                f"New Group Member",
+                f"{user.name} joined your group '{group.get('name', '')}'.",
+                f"/properties/{group.get('property_id', '')}"
+            )
         return {"message": "Joined group", "position": "member"}
     else:
         # Add to waitlist
