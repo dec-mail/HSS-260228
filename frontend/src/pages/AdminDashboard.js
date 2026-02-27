@@ -222,7 +222,10 @@ const AdminDashboard = () => {
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button className="btn btn-primary" onClick={() => navigate('/properties/add')}>+ Add Property</button>
-              <button className="btn btn-secondary" onClick={handleLogout} data-testid="logout-btn">Logout</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <NotificationBell />
+                <button className="btn btn-secondary" onClick={handleLogout} data-testid="logout-btn">Logout</button>
+              </div>
             </div>
           </div>
         </div>
