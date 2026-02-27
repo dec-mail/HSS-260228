@@ -16,7 +16,10 @@ Build `housesharingeniors.com.au`, a platform for seniors to find shared housing
 - Homepage property carousel with real images
 - Express Interest on properties (modal + admin email + Inquiries tab)
 - User Favorites (properties + members)
-- User Groups (create, join, leave, delete)
+- **Property-Centric Groups** (create, join, leave, waitlist, delete) — tied to specific properties
+- Unique `property_code` per property in `STATE-SUB-STR-NUM` format (e.g., QLD-KUR-SAI-44)
+- Groups UI on Property Detail Page (create group modal, join/leave/delete groups)
+- Groups tab in Member Dashboard showing all groups with property links
 - In-app Messaging (conversations, real-time chat UI)
 - Member Profile Pages (from application data)
 - Static pages: About, Contact, FAQ, Privacy, Terms, etc.
@@ -30,6 +33,9 @@ Build `housesharingeniors.com.au`, a platform for seniors to find shared housing
 - Test: jane.doe.test@example.com / testpass123
 
 ## Remaining Backlog
-- P2: Security hardening (rate limiting)
+- P1: User Profile enhancements (usernames, avatars, display_name)
+- P1: Property-group application flow (group applies collectively for a property)
+- P2: Email/in-app notifications for group events
+- P2: Security hardening (rate limiting, input sanitization)
 - P3: Custom domain, DB backups, production deployment
 - Nice: Admin bulk property actions, advanced member search
