@@ -862,6 +862,9 @@ async def bulk_create_properties(request: Request, user: User = Depends(get_curr
             
             prop_dict = {
                 "property_id": property_id,
+                "property_code": generate_property_code(
+                    prop_data.get("address", ""), prop_data.get("city", ""), prop_data.get("state", "")
+                ),
                 "added_by_user_id": user.user_id,
                 "status": "active",
                 "created_at": now,
