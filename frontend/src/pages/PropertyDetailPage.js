@@ -116,6 +116,48 @@ const PropertyDetailPage = () => {
     }
   };
 
+  const fetchPropertyGroups = async () => {
+    try {
+      const response = await axios.get(`${API}/groups?property_id=${propertyId}`, getAuthConfig());
+      setPropertyGroups(response.data);
+    } catch (e) { /* not logged in */ }
+  };
+
+  const createPropertyGroup = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/groups`, {
+        property_id: propertyId,
+        group_type: createGroupForm.group_type,
+        is_couple: createGroupForm.is_couple
+      }, getAuthConfig());
+      setShowCreateGroupModal(false);
+      setCreateGroupForm({ group_type: 'Mixed', is_couple: false });
+      fetchPropertyGroups();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to create group');
+    }
+  };
+
+  const joinPropertyGroup = async (groupId) => {
+    try {
+      const res = await axios.post(`${API}/groups/${groupId}/join`, {}, getAuthConfig());
+      alert(res.data.message);
+      fetchPropertyGroups();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to join');
+    }
+  };
+
+  const leavePropertyGroup = async (groupId) => {
+    try {
+      await axios.post(`${API}/groups/${groupId}/leave`, {}, getAuthConfig());
+      fetchPropertyGroups();
+    } catch (error) {
+      alert('Failed to leave group');
+    }
+  };
+
   if (loading) {
     return (
       <div className="property-detail-page">
