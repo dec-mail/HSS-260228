@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ChatBox from '../components/ChatBox';
 import './LandingPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -10,9 +11,17 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     axios.get(`${API}/properties`).then(res => setProperties(res.data)).catch(() => {});
+    // Check if user is logged in
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      axios.get(`${API}/auth/me`, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } })
+        .then(res => setCurrentUser(res.data))
+        .catch(() => {});
+    }
   }, []);
 
   const visibleCount = 3;
