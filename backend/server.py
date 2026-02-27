@@ -245,6 +245,9 @@ class Property(BaseModel):
     smoking_policy: Optional[str] = None
     lease_term: Optional[str] = None
     
+    # Unique Property Code (auto-generated)
+    property_code: Optional[str] = None
+    
     # Status
     status: Literal["active", "inactive", "pending"] = "active"
     
