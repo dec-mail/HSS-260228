@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({ applications: 0, pending: 0, properties: 0, members: 0, interests: 0 });
   const [selectedApps, setSelectedApps] = useState([]);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [groupApplications, setGroupApplications] = useState([]);
 
   useEffect(() => {
     fetchAllData();
