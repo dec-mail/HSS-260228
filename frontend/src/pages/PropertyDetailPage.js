@@ -20,10 +20,14 @@ const PropertyDetailPage = () => {
   const [interestSent, setInterestSent] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteId, setFavoriteId] = useState(null);
+  const [propertyGroups, setPropertyGroups] = useState([]);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [createGroupForm, setCreateGroupForm] = useState({ group_type: 'Mixed', is_couple: false });
 
   useEffect(() => {
     fetchCurrentUser();
     fetchProperty();
+    fetchPropertyGroups();
   }, [propertyId]);
 
   const getAuthConfig = () => {
