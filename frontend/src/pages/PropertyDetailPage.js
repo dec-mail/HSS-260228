@@ -514,6 +514,34 @@ const PropertyDetailPage = () => {
                               Delete
                             </button>
                           )}
+                          {isCreator && !groupApplications[group.group_id] && (
+                            <button
+                              className="btn btn-primary"
+                              style={{ padding: '6px 14px', fontSize: '12px', background: '#059669' }}
+                              onClick={async () => {
+                                if (window.confirm(`Apply for this property as group "${group.name}"?`)) {
+                                  try {
+                                    await axios.post(`${API}/groups/${group.group_id}/apply`, { message: '' }, getAuthConfig());
+                                    fetchGroupApplications();
+                                    alert('Application submitted!');
+                                  } catch (e) { alert(e.response?.data?.detail || 'Failed to apply'); }
+                                }
+                              }}
+                              data-testid={`apply-group-${group.group_id}`}
+                            >
+                              Apply for Property
+                            </button>
+                          )}
+                          {groupApplications[group.group_id] && (
+                            <span style={{
+                              fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '6px',
+                              background: groupApplications[group.group_id].status === 'approved' ? '#d1fae5' : groupApplications[group.group_id].status === 'rejected' ? '#fef2f2' : '#fef3c7',
+                              color: groupApplications[group.group_id].status === 'approved' ? '#059669' : groupApplications[group.group_id].status === 'rejected' ? '#ef4444' : '#d97706',
+                              textTransform: 'uppercase'
+                            }} data-testid={`group-app-status-${group.group_id}`}>
+                              {groupApplications[group.group_id].status === 'pending' ? 'Application Pending' : `Application ${groupApplications[group.group_id].status}`}
+                            </span>
+                          )}
                         </div>
                       </div>
                       {isMember && openGroupChats[group.group_id] && (
