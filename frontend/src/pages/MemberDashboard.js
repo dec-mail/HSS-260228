@@ -745,6 +745,27 @@ const MemberDashboard = () => {
           </div>
         )}
 
+
+        {/* Community Chat Tab */}
+        {activeTab === 'community' && (
+          <div className="community-chat-section" data-testid="community-chat-dashboard">
+            <div className="section-header">
+              <h2>Community Chat</h2>
+              <p>Chat with all members of the House Sharing Seniors community</p>
+            </div>
+            <div style={{ maxWidth: '700px' }}>
+              <ChatBox
+                channelType="community"
+                channelId="community"
+                currentUser={currentUser}
+                title="Community Chat"
+                height="500px"
+              />
+            </div>
+          </div>
+        )}
+
+
         {/* Favorites Tab */}
         {activeTab === 'favorites' && (
           <div className="favorites-section" data-testid="favorites-section">
