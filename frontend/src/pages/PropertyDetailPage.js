@@ -40,6 +40,7 @@ const PropertyDetailPage = () => {
     fetchCurrentUser();
     fetchProperty();
     fetchPropertyGroups();
+    fetchGroupApplications();
   }, [propertyId]);
 
   const getAuthConfig = () => {
