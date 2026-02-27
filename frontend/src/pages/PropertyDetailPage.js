@@ -392,6 +392,166 @@ const PropertyDetailPage = () => {
         </div>
       </div>
 
+      {/* Property Groups Section */}
+      {currentUser && (
+        <div className="details-sections" style={{ marginTop: '0' }}>
+          <div className="detail-section" data-testid="property-groups-section">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0 }}>Groups for This Property</h2>
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowCreateGroupModal(true)}
+                style={{ padding: '8px 16px', fontSize: '14px' }}
+                data-testid="create-group-btn"
+              >
+                + Create Group
+              </button>
+            </div>
+            <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '16px' }}>
+              Form a group with other members to share this property. Each group is tied to this property.
+            </p>
+            {propertyGroups.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px', background: '#f9fafb', borderRadius: '8px', color: '#6b7280' }} data-testid="no-groups-msg">
+                No groups yet. Be the first to create one!
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {propertyGroups.map(group => {
+                  const isMember = group.members?.some(m => m.user_id === currentUser?.user_id);
+                  const isWaitlisted = group.waitlist?.some(w => w.user_id === currentUser?.user_id);
+                  const isCreator = group.created_by === currentUser?.user_id;
+                  const occupied = group.spots_taken ?? group.members?.length ?? 0;
+                  const maxSpots = group.max_spots ?? 4;
+                  const available = Math.max(0, maxSpots - occupied);
+                  const statusColors = { vacancies: '#059669', full: '#d97706', fulfilled: '#2563eb', on_hold: '#6b7280' };
+                  return (
+                    <div
+                      key={group.group_id}
+                      style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}
+                      data-testid={`property-group-card-${group.group_id}`}
+                    >
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <strong style={{ fontSize: '16px' }}>{group.name}</strong>
+                          <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '12px', background: statusColors[group.status] || '#6b7280', color: 'white', textTransform: 'uppercase' }}>
+                            {group.status?.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0' }}>
+                          Type: {group.group_type} &middot; {occupied}/{maxSpots} members
+                          {available > 0 && <span style={{ color: '#059669', fontWeight: '600' }}> &middot; {available} spot{available !== 1 ? 's' : ''} left</span>}
+                          {(group.waitlist_count ?? group.waitlist?.length ?? 0) > 0 && (
+                            <span style={{ color: '#d97706' }}> &middot; {group.waitlist_count ?? group.waitlist?.length} waitlisted</span>
+                          )}
+                        </p>
+                        {group.members?.length > 0 && (
+                          <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
+                            Members: {group.members.map((m, i) => (
+                              <span key={m.user_id}>{i > 0 ? ', ' : ''}{m.name}{m.is_couple ? ' (couple)' : ''}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {isMember ? (
+                          <>
+                            <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600', padding: '4px 10px', background: '#d1fae5', borderRadius: '6px' }}>Joined</span>
+                            {!isCreator && (
+                              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => leavePropertyGroup(group.group_id)} data-testid={`leave-group-${group.group_id}`}>
+                                Leave
+                              </button>
+                            )}
+                          </>
+                        ) : isWaitlisted ? (
+                          <>
+                            <span style={{ fontSize: '12px', color: '#d97706', fontWeight: '600', padding: '4px 10px', background: '#fef3c7', borderRadius: '6px' }}>Waitlisted</span>
+                            <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => leavePropertyGroup(group.group_id)}>
+                              Leave Waitlist
+                            </button>
+                          </>
+                        ) : group.status !== 'fulfilled' && group.status !== 'on_hold' ? (
+                          <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '13px' }} onClick={() => joinPropertyGroup(group.group_id)} data-testid={`join-group-${group.group_id}`}>
+                            {available > 0 ? 'Join Group' : 'Join Waitlist'}
+                          </button>
+                        ) : null}
+                        {isCreator && (
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '6px 12px', fontSize: '12px', color: '#ef4444', borderColor: '#ef4444' }}
+                            onClick={async () => {
+                              if (window.confirm('Delete this group?')) {
+                                try {
+                                  await axios.delete(`${API}/groups/${group.group_id}`, getAuthConfig());
+                                  fetchPropertyGroups();
+                                } catch (e) { alert('Failed to delete group'); }
+                              }
+                            }}
+                            data-testid={`delete-group-${group.group_id}`}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Create Group Modal */}
+      {showCreateGroupModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateGroupModal(false)} data-testid="create-group-modal-overlay">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} data-testid="create-group-modal">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: '#1a2332' }}>Create a Group</h2>
+              <button onClick={() => setShowCreateGroupModal(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#6b7280' }}>&times;</button>
+            </div>
+            <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+              Start a group for <strong>{property.city}, {property.state}</strong>. Other members can then join.
+            </p>
+            <form onSubmit={createPropertyGroup}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Group Type</label>
+                <select
+                  value={createGroupForm.group_type}
+                  onChange={(e) => setCreateGroupForm({...createGroupForm, group_type: e.target.value})}
+                  style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                  data-testid="group-type-select"
+                >
+                  <option value="Mixed">Mixed</option>
+                  <option value="SingleFemale">Single Female</option>
+                  <option value="SingleMale">Single Male</option>
+                  <option value="Couples">Couples</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={createGroupForm.is_couple}
+                    onChange={(e) => setCreateGroupForm({...createGroupForm, is_couple: e.target.checked})}
+                    style={{ width: '18px', height: '18px' }}
+                    data-testid="is-couple-checkbox"
+                  />
+                  I am joining as a couple (counts as 1 spot)
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} data-testid="create-group-submit">
+                  Create Group
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateGroupModal(false)} style={{ flex: 1 }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Express Interest Modal */}
       {showInterestModal && (
         <div className="modal-overlay" onClick={() => setShowInterestModal(false)} data-testid="interest-modal-overlay">
