@@ -1694,6 +1694,78 @@ async def submit_contact_form(contact: ContactFormRequest):
         logger.error(f"Contact form error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to send message")
 
+# ============ CHAT ROUTES (Community + Group) ============
+
+class ChatMessageRequest(BaseModel):
+    content: str
+
+@api_router.post("/chat/community")
+async def send_community_message(req: ChatMessageRequest, user: User = Depends(get_current_user)):
+    """Send a message to the site-wide community chat"""
+    if not req.content.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    now = datetime.now(timezone.utc).isoformat()
+    msg = {
+        "message_id": f"cmsg_{uuid.uuid4().hex[:12]}",
+        "channel_type": "community",
+        "channel_id": "community",
+        "user_id": user.user_id,
+        "user_name": user.name,
+        "content": req.content.strip(),
+        "created_at": now
+    }
+    await db.chat_messages.insert_one(msg)
+    msg.pop("_id", None)
+    return msg
+
+@api_router.get("/chat/community")
+async def get_community_messages(limit: int = 50, before: Optional[str] = None):
+    """Get community chat messages (public read, newest last)"""
+    query = {"channel_type": "community", "channel_id": "community"}
+    if before:
+        query["created_at"] = {"$lt": before}
+    messages = await db.chat_messages.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    messages.reverse()
+    return messages
+
+@api_router.post("/chat/group/{group_id}")
+async def send_group_message(group_id: str, req: ChatMessageRequest, user: User = Depends(get_current_user)):
+    """Send a message to a property group chat"""
+    if not req.content.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    group = await db.groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    if not any(m["user_id"] == user.user_id for m in group.get("members", [])):
+        raise HTTPException(status_code=403, detail="Only group members can chat")
+    now = datetime.now(timezone.utc).isoformat()
+    msg = {
+        "message_id": f"gmsg_{uuid.uuid4().hex[:12]}",
+        "channel_type": "group",
+        "channel_id": group_id,
+        "user_id": user.user_id,
+        "user_name": user.name,
+        "content": req.content.strip(),
+        "created_at": now
+    }
+    await db.chat_messages.insert_one(msg)
+    msg.pop("_id", None)
+    return msg
+
+@api_router.get("/chat/group/{group_id}")
+async def get_group_messages(group_id: str, user: User = Depends(get_current_user), limit: int = 50):
+    """Get messages for a property group chat"""
+    group = await db.groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    if not any(m["user_id"] == user.user_id for m in group.get("members", [])):
+        raise HTTPException(status_code=403, detail="Only group members can view chat")
+    messages = await db.chat_messages.find(
+        {"channel_type": "group", "channel_id": group_id}, {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    messages.reverse()
+    return messages
+
 # ============ INCLUDE ROUTER ============
 
 app.include_router(api_router)
