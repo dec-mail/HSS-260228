@@ -1779,6 +1779,180 @@ async def submit_contact_form(contact: ContactFormRequest):
         logger.error(f"Contact form error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to send message")
 
+# ============ NOTIFICATIONS ROUTES ============
+
+@api_router.get("/notifications")
+async def get_notifications(user: User = Depends(get_current_user), limit: int = 30):
+    """Get user's notifications"""
+    notifs = await db.notifications.find(
+        {"user_id": user.user_id}, {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    return notifs
+
+@api_router.get("/notifications/unread/count")
+async def get_unread_notification_count(user: User = Depends(get_current_user)):
+    """Get unread notification count"""
+    count = await db.notifications.count_documents({"user_id": user.user_id, "read": False})
+    return {"count": count}
+
+@api_router.post("/notifications/read-all")
+async def mark_all_notifications_read(user: User = Depends(get_current_user)):
+    """Mark all notifications as read"""
+    await db.notifications.update_many(
+        {"user_id": user.user_id, "read": False},
+        {"$set": {"read": True}}
+    )
+    return {"message": "All notifications marked as read"}
+
+@api_router.patch("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: User = Depends(get_current_user)):
+    """Mark a single notification as read"""
+    await db.notifications.update_one(
+        {"notification_id": notification_id, "user_id": user.user_id},
+        {"$set": {"read": True}}
+    )
+    return {"message": "Notification marked as read"}
+
+# ============ USER PROFILE ROUTES ============
+
+class UpdateProfileRequest(BaseModel):
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    notification_prefs: Optional[dict] = None
+
+@api_router.patch("/users/profile")
+async def update_profile(req: UpdateProfileRequest, user: User = Depends(get_current_user)):
+    """Update current user's profile"""
+    updates = {}
+    if req.display_name is not None:
+        updates["display_name"] = req.display_name.strip()[:50]
+    if req.avatar_url is not None:
+        updates["avatar_url"] = req.avatar_url
+    if req.notification_prefs is not None:
+        updates["notification_prefs"] = req.notification_prefs
+    if not updates:
+        raise HTTPException(status_code=400, detail="No updates provided")
+    await db.users.update_one({"user_id": user.user_id}, {"$set": updates})
+    updated = await db.users.find_one({"user_id": user.user_id}, {"_id": 0})
+    updated.pop("password_hash", None)
+    return updated
+
+@api_router.post("/users/avatar")
+async def upload_avatar(file: UploadFile = File(...), user: User = Depends(get_current_user)):
+    """Upload avatar image"""
+    ext = Path(file.filename).suffix.lower()
+    if ext not in {".jpg", ".jpeg", ".png", ".webp"}:
+        raise HTTPException(status_code=400, detail="Use JPG, PNG, or WebP")
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Max 5MB")
+    import asyncio
+    result = await asyncio.to_thread(
+        cloudinary.uploader.upload, content, folder="hss/avatars", resource_type="image"
+    )
+    url = result["secure_url"]
+    await db.users.update_one({"user_id": user.user_id}, {"$set": {"avatar_url": url}})
+    return {"avatar_url": url}
+
+# ============ GROUP APPLICATION ROUTES ============
+
+class GroupApplicationRequest(BaseModel):
+    message: Optional[str] = ""
+
+@api_router.post("/groups/{group_id}/apply")
+async def group_apply_for_property(group_id: str, req: GroupApplicationRequest, user: User = Depends(get_current_user)):
+    """Submit a group application for the property (group creator or admin only)"""
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    if group["created_by"] != user.user_id and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only the group creator can submit an application")
+    prop = await db.properties.find_one({"property_id": group["property_id"]}, {"_id": 0})
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    # Check no existing application
+    existing = await db.group_applications.find_one({"group_id": group_id, "status": {"$ne": "rejected"}})
+    if existing:
+        raise HTTPException(status_code=400, detail="This group already has an active application")
+    now = datetime.now(timezone.utc).isoformat()
+    app_doc = {
+        "application_id": f"gapp_{uuid.uuid4().hex[:12]}",
+        "group_id": group_id,
+        "group_name": group.get("name", ""),
+        "property_id": group["property_id"],
+        "property_city": prop.get("city", ""),
+        "property_state": prop.get("state", ""),
+        "submitted_by": user.user_id,
+        "submitted_by_name": user.name,
+        "members": group.get("members", []),
+        "message": req.message,
+        "status": "pending",
+        "created_at": now,
+        "updated_at": now
+    }
+    await db.group_applications.insert_one(app_doc)
+    app_doc.pop("_id", None)
+    # Notify all group members
+    for m in group.get("members", []):
+        if m["user_id"] != user.user_id:
+            await create_notification(
+                m["user_id"], "group_application",
+                f"Group Application Submitted",
+                f"{user.name} submitted your group '{group['name']}' for {prop.get('city', '')}, {prop.get('state', '')}.",
+                f"/properties/{group['property_id']}"
+            )
+    return app_doc
+
+@api_router.get("/group-applications")
+async def list_group_applications(admin: User = Depends(require_admin), status: Optional[str] = None):
+    """List group applications (admin only)"""
+    query = {}
+    if status:
+        query["status"] = status
+    apps = await db.group_applications.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return apps
+
+@api_router.get("/group-applications/my")
+async def get_my_group_applications(user: User = Depends(get_current_user)):
+    """Get group applications for groups user is in"""
+    user_groups = await db.groups.find({"members.user_id": user.user_id}, {"group_id": 1, "_id": 0}).to_list(100)
+    group_ids = [g["group_id"] for g in user_groups]
+    if not group_ids:
+        return []
+    apps = await db.group_applications.find(
+        {"group_id": {"$in": group_ids}}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return apps
+
+@api_router.patch("/group-applications/{application_id}/status")
+async def update_group_application_status(application_id: str, request: Request, admin: User = Depends(require_admin)):
+    """Approve or reject a group application (admin only)"""
+    body = await request.json()
+    new_status = body.get("status")
+    if new_status not in ("approved", "rejected"):
+        raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
+    app_doc = await db.group_applications.find_one({"application_id": application_id}, {"_id": 0})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Application not found")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.group_applications.update_one(
+        {"application_id": application_id},
+        {"$set": {"status": new_status, "updated_at": now}}
+    )
+    # Update group status if approved
+    if new_status == "approved":
+        await db.groups.update_one({"group_id": app_doc["group_id"]}, {"$set": {"status": "fulfilled"}})
+    # Notify members
+    for m in app_doc.get("members", []):
+        status_msg = "approved" if new_status == "approved" else "not approved"
+        await create_notification(
+            m["user_id"], "group_application_status",
+            f"Group Application {new_status.title()}",
+            f"Your group '{app_doc['group_name']}' application for {app_doc['property_city']}, {app_doc['property_state']} has been {status_msg}.",
+            f"/properties/{app_doc['property_id']}"
+        )
+    return {"message": f"Application {new_status}", "application_id": application_id}
+
 # ============ CHAT ROUTES (Community + Group) ============
 
 class ChatMessageRequest(BaseModel):
