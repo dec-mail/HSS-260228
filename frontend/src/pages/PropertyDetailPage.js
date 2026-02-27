@@ -427,73 +427,95 @@ const PropertyDetailPage = () => {
                   const available = Math.max(0, maxSpots - occupied);
                   const statusColors = { vacancies: '#059669', full: '#d97706', fulfilled: '#2563eb', on_hold: '#6b7280' };
                   return (
-                    <div
-                      key={group.group_id}
-                      style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}
-                      data-testid={`property-group-card-${group.group_id}`}
-                    >
-                      <div style={{ flex: 1, minWidth: '200px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                          <strong style={{ fontSize: '16px' }}>{group.name}</strong>
-                          <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '12px', background: statusColors[group.status] || '#6b7280', color: 'white', textTransform: 'uppercase' }}>
-                            {group.status?.replace('_', ' ')}
-                          </span>
-                        </div>
-                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0' }}>
-                          Type: {group.group_type} &middot; {occupied}/{maxSpots} members
-                          {available > 0 && <span style={{ color: '#059669', fontWeight: '600' }}> &middot; {available} spot{available !== 1 ? 's' : ''} left</span>}
-                          {(group.waitlist_count ?? group.waitlist?.length ?? 0) > 0 && (
-                            <span style={{ color: '#d97706' }}> &middot; {group.waitlist_count ?? group.waitlist?.length} waitlisted</span>
-                          )}
-                        </p>
-                        {group.members?.length > 0 && (
-                          <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
-                            Members: {group.members.map((m, i) => (
-                              <span key={m.user_id}>{i > 0 ? ', ' : ''}{m.name}{m.is_couple ? ' (couple)' : ''}</span>
-                            ))}
+                    <div key={group.group_id} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                      <div
+                        style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: openGroupChats[group.group_id] ? '10px 10px 0 0' : '10px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}
+                        data-testid={`property-group-card-${group.group_id}`}
+                      >
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <strong style={{ fontSize: '16px' }}>{group.name}</strong>
+                            <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '12px', background: statusColors[group.status] || '#6b7280', color: 'white', textTransform: 'uppercase' }}>
+                              {group.status?.replace('_', ' ')}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        {isMember ? (
-                          <>
-                            <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600', padding: '4px 10px', background: '#d1fae5', borderRadius: '6px' }}>Joined</span>
-                            {!isCreator && (
-                              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => leavePropertyGroup(group.group_id)} data-testid={`leave-group-${group.group_id}`}>
-                                Leave
-                              </button>
+                          <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0' }}>
+                            Type: {group.group_type} &middot; {occupied}/{maxSpots} members
+                            {available > 0 && <span style={{ color: '#059669', fontWeight: '600' }}> &middot; {available} spot{available !== 1 ? 's' : ''} left</span>}
+                            {(group.waitlist_count ?? group.waitlist?.length ?? 0) > 0 && (
+                              <span style={{ color: '#d97706' }}> &middot; {group.waitlist_count ?? group.waitlist?.length} waitlisted</span>
                             )}
-                          </>
-                        ) : isWaitlisted ? (
-                          <>
-                            <span style={{ fontSize: '12px', color: '#d97706', fontWeight: '600', padding: '4px 10px', background: '#fef3c7', borderRadius: '6px' }}>Waitlisted</span>
-                            <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => leavePropertyGroup(group.group_id)}>
-                              Leave Waitlist
+                          </p>
+                          {group.members?.length > 0 && (
+                            <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>
+                              Members: {group.members.map((m, i) => (
+                                <span key={m.user_id}>{i > 0 ? ', ' : ''}{m.name}{m.is_couple ? ' (couple)' : ''}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {isMember && (
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: '6px 12px', fontSize: '12px', background: openGroupChats[group.group_id] ? '#2563eb' : undefined, color: openGroupChats[group.group_id] ? '#fff' : undefined }}
+                              onClick={() => setOpenGroupChats(prev => ({ ...prev, [group.group_id]: !prev[group.group_id] }))}
+                              data-testid={`toggle-chat-${group.group_id}`}
+                            >
+                              {openGroupChats[group.group_id] ? 'Close Chat' : 'Group Chat'}
                             </button>
-                          </>
-                        ) : group.status !== 'fulfilled' && group.status !== 'on_hold' ? (
-                          <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '13px' }} onClick={() => joinPropertyGroup(group.group_id)} data-testid={`join-group-${group.group_id}`}>
-                            {available > 0 ? 'Join Group' : 'Join Waitlist'}
-                          </button>
-                        ) : null}
-                        {isCreator && (
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: '6px 12px', fontSize: '12px', color: '#ef4444', borderColor: '#ef4444' }}
-                            onClick={async () => {
-                              if (window.confirm('Delete this group?')) {
-                                try {
-                                  await axios.delete(`${API}/groups/${group.group_id}`, getAuthConfig());
-                                  fetchPropertyGroups();
-                                } catch (e) { alert('Failed to delete group'); }
-                              }
-                            }}
-                            data-testid={`delete-group-${group.group_id}`}
-                          >
-                            Delete
-                          </button>
-                        )}
+                          )}
+                          {isMember ? (
+                            <>
+                              <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600', padding: '4px 10px', background: '#d1fae5', borderRadius: '6px' }}>Joined</span>
+                              {!isCreator && (
+                                <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => leavePropertyGroup(group.group_id)} data-testid={`leave-group-${group.group_id}`}>
+                                  Leave
+                                </button>
+                              )}
+                            </>
+                          ) : isWaitlisted ? (
+                            <>
+                              <span style={{ fontSize: '12px', color: '#d97706', fontWeight: '600', padding: '4px 10px', background: '#fef3c7', borderRadius: '6px' }}>Waitlisted</span>
+                              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => leavePropertyGroup(group.group_id)}>
+                                Leave Waitlist
+                              </button>
+                            </>
+                          ) : group.status !== 'fulfilled' && group.status !== 'on_hold' ? (
+                            <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '13px' }} onClick={() => joinPropertyGroup(group.group_id)} data-testid={`join-group-${group.group_id}`}>
+                              {available > 0 ? 'Join Group' : 'Join Waitlist'}
+                            </button>
+                          ) : null}
+                          {isCreator && (
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: '6px 12px', fontSize: '12px', color: '#ef4444', borderColor: '#ef4444' }}
+                              onClick={async () => {
+                                if (window.confirm('Delete this group?')) {
+                                  try {
+                                    await axios.delete(`${API}/groups/${group.group_id}`, getAuthConfig());
+                                    fetchPropertyGroups();
+                                  } catch (e) { alert('Failed to delete group'); }
+                                }
+                              }}
+                              data-testid={`delete-group-${group.group_id}`}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
                       </div>
+                      {isMember && openGroupChats[group.group_id] && (
+                        <div style={{ borderLeft: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
+                          <ChatBox
+                            channelType="group"
+                            channelId={group.group_id}
+                            currentUser={currentUser}
+                            title={`${group.name} Chat`}
+                            height="350px"
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
