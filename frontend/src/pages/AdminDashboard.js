@@ -266,6 +266,9 @@ const AdminDashboard = () => {
           <button className={`admin-tab ${activeTab === 'inquiries' ? 'active' : ''}`} onClick={() => setActiveTab('inquiries')}>
             Inquiries {stats.interests > 0 && <span style={{ background: '#ef4444', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '12px', marginLeft: '6px' }}>{stats.interests}</span>}
           </button>
+          <button className={`admin-tab ${activeTab === 'group-apps' ? 'active' : ''}`} onClick={() => setActiveTab('group-apps')} data-testid="group-apps-tab">
+            Group Applications {groupApplications.filter(a => a.status === 'pending').length > 0 && <span style={{ background: '#ef4444', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '12px', marginLeft: '6px' }}>{groupApplications.filter(a => a.status === 'pending').length}</span>}
+          </button>
         </div>
 
         {/* Applications Tab */}
