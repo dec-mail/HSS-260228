@@ -831,6 +831,9 @@ async def create_property(property_data: PropertyCreate, user: User = Depends(ge
     
     prop_dict = property_data.model_dump()
     prop_dict["property_id"] = property_id
+    prop_dict["property_code"] = generate_property_code(
+        prop_dict.get("address", ""), prop_dict.get("city", ""), prop_dict.get("state", "")
+    )
     prop_dict["added_by_user_id"] = user.user_id
     prop_dict["status"] = "active"
     prop_dict["created_at"] = now
