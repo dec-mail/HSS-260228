@@ -1680,6 +1680,13 @@ async def send_message(req: SendMessageRequest, user: User = Depends(get_current
     }
     await db.messages.insert_one(msg_doc)
     msg_doc.pop("_id", None)
+    # Notify recipient
+    await create_notification(
+        req.to_user_id, "new_message",
+        "New Message",
+        f"{user.name} sent you a message.",
+        "/dashboard"
+    )
     return msg_doc
 
 @api_router.get("/messages/conversations")
