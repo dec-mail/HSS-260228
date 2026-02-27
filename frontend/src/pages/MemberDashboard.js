@@ -587,67 +587,65 @@ const MemberDashboard = () => {
         {/* Groups Tab */}
         {activeTab === 'groups' && (
           <div className="groups-section" data-testid="groups-section">
-            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h2>Groups</h2>
-                <p>Find and join groups of compatible housemates</p>
-              </div>
-              <button className="btn btn-primary" onClick={() => setShowCreateGroup(true)} data-testid="create-group-btn">
-                Create Group
-              </button>
+            <div className="section-header">
+              <h2>Property Groups</h2>
+              <p>Groups form around properties. Browse properties to create or join a group.</p>
             </div>
 
-            {showCreateGroup && (
-              <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-                <h3 style={{ margin: '0 0 16px 0' }}>Create New Group</h3>
-                <form onSubmit={createGroup}>
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px' }}>Group Name *</label>
-                    <input type="text" value={groupForm.name} onChange={(e) => setGroupForm({...groupForm, name: e.target.value})} required style={{ width: '100%', padding: '10px', border: '2px solid #e5e7eb', borderRadius: '8px', boxSizing: 'border-box' }} data-testid="group-name-input" />
-                  </div>
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px' }}>Description</label>
-                    <textarea value={groupForm.description} onChange={(e) => setGroupForm({...groupForm, description: e.target.value})} rows={3} style={{ width: '100%', padding: '10px', border: '2px solid #e5e7eb', borderRadius: '8px', resize: 'vertical', boxSizing: 'border-box' }} data-testid="group-desc-input" />
-                  </div>
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '14px' }}>Housing Preference</label>
-                    <input type="text" value={groupForm.housing_preference} onChange={(e) => setGroupForm({...groupForm, housing_preference: e.target.value})} placeholder="e.g. Sunny Coast, QLD" style={{ width: '100%', padding: '10px', border: '2px solid #e5e7eb', borderRadius: '8px', boxSizing: 'border-box' }} data-testid="group-pref-input" />
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button type="submit" className="btn btn-primary" data-testid="group-create-submit">Create</button>
-                    <button type="button" className="btn btn-secondary" onClick={() => setShowCreateGroup(false)}>Cancel</button>
-                  </div>
-                </form>
-              </div>
-            )}
-
             {groups.length === 0 ? (
-              <div className="empty-shortlist"><p>No groups yet. Create one to get started!</p></div>
+              <div className="empty-shortlist">
+                <p>No groups yet. Visit a property page to create a group for it.</p>
+                <button className="btn btn-primary" onClick={() => navigate('/properties')} data-testid="browse-props-for-groups">
+                  Browse Properties
+                </button>
+              </div>
             ) : (
               <div className="members-grid">
                 {groups.map(group => {
                   const isMember = group.members?.some(m => m.user_id === currentUser?.user_id);
+                  const isWaitlisted = group.waitlist?.some(w => w.user_id === currentUser?.user_id);
                   const isCreator = group.created_by === currentUser?.user_id;
+                  const statusColors = { vacancies: '#059669', full: '#d97706', fulfilled: '#2563eb', on_hold: '#6b7280' };
                   return (
                     <div key={group.group_id} className="member-card" data-testid={`group-card-${group.group_id}`}>
                       <div className="member-info">
-                        <h3>{group.name}</h3>
-                        {group.description && <p style={{ color: '#6b7280', fontSize: '14px', margin: '4px 0' }}>{group.description}</p>}
-                        {group.housing_preference && <p style={{ color: '#2563eb', fontSize: '13px', margin: '2px 0' }}>Preference: {group.housing_preference}</p>}
-                        <p style={{ fontSize: '13px', color: '#9ca3af', margin: '4px 0' }}>
-                          {group.members?.length || 0} member{(group.members?.length || 0) !== 1 ? 's' : ''} &middot; Created by {group.creator_name}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h3 style={{ margin: 0 }}>{group.name}</h3>
+                          <span style={{ fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '12px', background: statusColors[group.status] || '#6b7280', color: 'white', textTransform: 'uppercase' }}>{group.status?.replace('_', ' ')}</span>
+                        </div>
+                        <p style={{ color: '#2563eb', fontSize: '13px', margin: '4px 0', cursor: 'pointer' }} onClick={() => navigate(`/properties/${group.property_id}`)}>
+                          {group.property_city}, {group.property_state} — ${group.property_rent}/wk per bedroom
                         </p>
+                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0' }}>
+                          Type: {group.group_type} &middot; {group.spots_taken}/{group.max_spots} members
+                          {group.spots_available > 0 && <span style={{ color: '#059669', fontWeight: '600' }}> &middot; {group.spots_available} spot{group.spots_available !== 1 ? 's' : ''} left</span>}
+                          {group.waitlist_count > 0 && <span style={{ color: '#d97706' }}> &middot; {group.waitlist_count} waitlisted</span>}
+                        </p>
+                        {group.members?.length > 0 && (
+                          <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '6px' }}>
+                            Members: {group.members.map((m, i) => (
+                              <span key={m.user_id}>{i > 0 ? ', ' : ''}<span style={{ cursor: 'pointer', color: '#2563eb' }} onClick={() => navigate(`/members/${m.user_id}`)}>{m.name}{m.is_couple ? ' (couple)' : ''}</span></span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <div className="member-actions">
+                      <div className="member-actions" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {isMember ? (
                           <>
                             <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600' }}>Joined</span>
-                            {!isCreator && <button className="btn btn-sm btn-danger" onClick={() => leaveGroup(group.group_id)} data-testid={`leave-group-${group.group_id}`}>Leave</button>}
+                            {!isCreator && <button className="btn btn-sm btn-danger" onClick={() => leaveGroup(group.group_id)}>Leave</button>}
                           </>
-                        ) : (
-                          <button className="btn btn-sm btn-primary" onClick={() => joinGroup(group.group_id)} data-testid={`join-group-${group.group_id}`}>Join</button>
-                        )}
-                        {isCreator && <button className="btn btn-sm btn-danger" onClick={() => deleteGroup(group.group_id)} data-testid={`delete-group-${group.group_id}`} style={{ marginTop: '4px' }}>Delete</button>}
+                        ) : isWaitlisted ? (
+                          <>
+                            <span style={{ fontSize: '12px', color: '#d97706', fontWeight: '600' }}>Waitlisted</span>
+                            <button className="btn btn-sm" onClick={() => leaveGroup(group.group_id)}>Leave Waitlist</button>
+                          </>
+                        ) : group.status !== 'fulfilled' && group.status !== 'on_hold' ? (
+                          <button className="btn btn-sm btn-primary" onClick={() => joinGroup(group.group_id)} data-testid={`join-group-${group.group_id}`}>
+                            {group.spots_available > 0 ? 'Join' : 'Join Waitlist'}
+                          </button>
+                        ) : null}
+                        {isCreator && <button className="btn btn-sm btn-danger" onClick={() => deleteGroup(group.group_id)} style={{ marginTop: '4px' }}>Delete</button>}
                       </div>
                     </div>
                   );
