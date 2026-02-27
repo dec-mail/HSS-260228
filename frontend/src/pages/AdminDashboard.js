@@ -36,17 +36,19 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('auth_token');
       const config = { withCredentials: true, headers: { Authorization: `Bearer ${token}` } };
       
-      const [appsRes, propsRes, membersRes, interestsRes] = await Promise.all([
+      const [appsRes, propsRes, membersRes, interestsRes, groupAppsRes] = await Promise.all([
         axios.get(`${API}/applications`, config).catch(() => ({ data: [] })),
         axios.get(`${API}/properties`).catch(() => ({ data: [] })),
         axios.get(`${API}/members`, config).catch(() => ({ data: [] })),
-        axios.get(`${API}/interests`, config).catch(() => ({ data: [] }))
+        axios.get(`${API}/interests`, config).catch(() => ({ data: [] })),
+        axios.get(`${API}/group-applications`, config).catch(() => ({ data: [] }))
       ]);
       
       setApplications(appsRes.data);
       setProperties(propsRes.data);
       setMembers(membersRes.data);
       setInterests(interestsRes.data);
+      setGroupApplications(groupAppsRes.data);
       
       setStats({
         applications: appsRes.data.length,
