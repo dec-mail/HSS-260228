@@ -9,7 +9,7 @@ import os
 import uuid
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://senior-housing-beta.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shared-living-hub.preview.emergentagent.com')
 API = f"{BASE_URL}/api"
 
 # Admin credentials
