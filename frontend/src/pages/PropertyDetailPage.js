@@ -25,6 +25,16 @@ const PropertyDetailPage = () => {
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [createGroupForm, setCreateGroupForm] = useState({ group_type: 'Mixed', is_couple: false });
   const [openGroupChats, setOpenGroupChats] = useState({});
+  const [groupApplications, setGroupApplications] = useState({});
+
+  const fetchGroupApplications = async () => {
+    try {
+      const res = await axios.get(`${API}/group-applications/my`, getAuthConfig());
+      const map = {};
+      res.data.forEach(a => { map[a.group_id] = a; });
+      setGroupApplications(map);
+    } catch (e) { /* silent */ }
+  };
 
   useEffect(() => {
     fetchCurrentUser();
