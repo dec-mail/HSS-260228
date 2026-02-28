@@ -59,6 +59,7 @@ const MemberDashboard = () => {
     fetchFavorites();
     fetchGroups();
     fetchConversations();
+    fetchProperties();
   }, []);
 
   useEffect(() => {
