@@ -385,32 +385,32 @@ const MemberDashboard = () => {
         {/* Tab Navigation */}
         <div className="tab-navigation">
           <button
+            className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`}
+            onClick={() => setActiveTab('properties')}
+            data-testid="properties-tab"
+          >
+            Properties
+          </button>
+          <button
             className={`tab-btn ${activeTab === 'browse' ? 'active' : ''}`}
             onClick={() => setActiveTab('browse')}
             data-testid="browse-tab"
           >
-            Browse Members
+            Members
           </button>
           <button
-            className={`tab-btn ${activeTab === 'shortlist' ? 'active' : ''}`}
-            onClick={() => setActiveTab('shortlist')}
-            data-testid="shortlist-tab"
+            className={`tab-btn ${activeTab === 'saved' ? 'active' : ''}`}
+            onClick={() => setActiveTab('saved')}
+            data-testid="saved-tab"
           >
-            My Shortlist ({shortlists.length})
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
-            onClick={() => setActiveTab('favorites')}
-            data-testid="favorites-tab"
-          >
-            Favorites ({favorites.length})
+            Saved ({favorites.length + shortlists.length})
           </button>
           <button
             className={`tab-btn ${activeTab === 'groups' ? 'active' : ''}`}
             onClick={() => setActiveTab('groups')}
             data-testid="groups-tab"
           >
-            Groups ({groups.length})
+            My Groups ({groups.length})
           </button>
           <button
             className={`tab-btn ${activeTab === 'messages' ? 'active' : ''}`}
