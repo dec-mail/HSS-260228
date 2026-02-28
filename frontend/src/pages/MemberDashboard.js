@@ -435,6 +435,91 @@ const MemberDashboard = () => {
           </button>
         </div>
 
+        {/* Properties Tab */}
+        {activeTab === 'properties' && (
+          <div className="properties-section" data-testid="properties-section">
+            <div className="section-header">
+              <h2>Browse Properties</h2>
+              <p>Find shared housing that suits your needs</p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                placeholder="Search by suburb, state..."
+                value={propertySearch}
+                onChange={(e) => setPropertySearch(e.target.value)}
+                style={{ flex: 1, minWidth: '200px', padding: '10px 14px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                data-testid="property-search-input"
+              />
+              <select
+                value={propertyFilter.state}
+                onChange={(e) => setPropertyFilter({ ...propertyFilter, state: e.target.value })}
+                style={{ padding: '10px 14px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                data-testid="property-state-filter"
+              >
+                <option value="">All States</option>
+                <option value="QLD">QLD</option><option value="NSW">NSW</option><option value="VIC">VIC</option>
+                <option value="SA">SA</option><option value="WA">WA</option><option value="TAS">TAS</option>
+                <option value="NT">NT</option><option value="ACT">ACT</option>
+              </select>
+              <select
+                value={propertyFilter.bedrooms}
+                onChange={(e) => setPropertyFilter({ ...propertyFilter, bedrooms: e.target.value })}
+                style={{ padding: '10px 14px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                data-testid="property-bedrooms-filter"
+              >
+                <option value="">All Bedrooms</option>
+                <option value="2">2 Bed</option><option value="3">3 Bed</option>
+                <option value="4">4 Bed</option><option value="5">5+ Bed</option>
+              </select>
+            </div>
+            <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '16px' }}>{filteredProperties.length} properties found</p>
+            {filteredProperties.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>No properties match your search.</div>
+            ) : (
+              <div className="members-grid">
+                {filteredProperties.map(prop => {
+                  const r = prop.weekly_rent_per_person || 0;
+                  const sCRA = Math.min(71.80, Math.max(0, 0.75 * (r - 76)));
+                  const netSingle = (r - sCRA).toFixed(2);
+                  return (
+                    <div
+                      key={prop.property_id}
+                      className="member-card"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/properties/${prop.property_id}`)}
+                      data-testid={`property-card-${prop.property_id}`}
+                    >
+                      {prop.images?.[0] && (
+                        <div style={{ width: '100%', height: '140px', overflow: 'hidden', borderRadius: '8px', marginBottom: '10px' }}>
+                          <img src={prop.images[0]} alt={prop.city} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      )}
+                      <div className="member-info">
+                        <h3 style={{ margin: '0 0 4px' }}>{prop.city}, {prop.state}</h3>
+                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0' }}>{prop.bedrooms} bed &middot; {prop.bathrooms} bath &middot; {prop.property_type}</p>
+                        <p style={{ color: '#2563eb', fontWeight: '700', fontSize: '18px', margin: '6px 0 2px' }}>${r}/wk per bedroom</p>
+                        {sCRA > 0 && <p style={{ fontSize: '12px', color: '#059669', margin: 0 }}>With CRA: ${netSingle}/wk (single)</p>}
+                        {prop.property_code && <p style={{ fontSize: '11px', color: '#9ca3af', margin: '4px 0 0' }}>Code: {prop.property_code}</p>}
+                      </div>
+                      <div className="member-actions" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleFavorite(prop.property_id, 'property')}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: isFavorited(prop.property_id, 'property') ? '#ef4444' : '#d1d5db' }}
+                          data-testid={`fav-prop-btn-${prop.property_id}`}
+                          title={isFavorited(prop.property_id, 'property') ? 'Remove from saved' : 'Save property'}
+                        >
+                          {isFavorited(prop.property_id, 'property') ? '♥' : '♡'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Browse Members Tab */}
         {activeTab === 'browse' && (
           <div className="members-section" data-testid="browse-section">
