@@ -651,56 +651,107 @@ const MemberDashboard = () => {
           </div>
         )}
 
-        {/* Shortlist Tab */}
-        {activeTab === 'shortlist' && (
-          <div className="shortlist-section" data-testid="shortlist-section">
+        {/* Saved Tab (merged Shortlist + Favorites) */}
+        {activeTab === 'saved' && (
+          <div className="saved-section" data-testid="saved-section">
             <div className="section-header">
-              <h2>My Shortlist</h2>
-              <p>Members you're interested in sharing costs with</p>
+              <h2>Saved Items</h2>
+              <p>Properties and members you've saved or shortlisted</p>
             </div>
 
-            {shortlists.length === 0 ? (
+            {favorites.length === 0 && shortlists.length === 0 ? (
               <div className="empty-shortlist">
-                <p>Your shortlist is empty</p>
-                <button 
-                  className="btn btn-primary" 
-                  onClick={() => setActiveTab('browse')}
-                  data-testid="browse-members-btn"
-                >
-                  Browse Members
-                </button>
+                <p>Nothing saved yet. Browse properties or members and click the heart icon to save them.</p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button className="btn btn-primary" onClick={() => setActiveTab('properties')} data-testid="browse-properties-btn">
+                    Browse Properties
+                  </button>
+                  <button className="btn btn-secondary" onClick={() => setActiveTab('browse')} data-testid="browse-members-from-saved-btn">
+                    Browse Members
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="shortlist-grid">
-                {shortlists.map((item) => (
-                  <div key={item.shortlist_id} className="shortlist-card" data-testid={`shortlist-card-${item.shortlist_id}`}>
-                    <div className="member-avatar">
-                      {item.member.picture ? (
-                        <img src={item.member.picture} alt={item.member.name} />
-                      ) : (
-                        <div className="avatar-placeholder">{item.member.name.charAt(0)}</div>
-                      )}
-                    </div>
-                    <div className="member-info">
-                      <h3>{item.member.name}</h3>
-                      <p className="member-email">{item.member.email}</p>
-                      <p className="member-date">Added {new Date(item.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div className="member-actions">
-                      <button 
-                        className="btn btn-danger"
-                        onClick={() => removeFromShortlist(item.shortlist_id)}
-                        data-testid={`remove-btn-${item.shortlist_id}`}
-                      >
-                        Remove
-                      </button>
+              <>
+                {/* Saved Properties */}
+                {favorites.filter(f => f.item_type === 'property').length > 0 && (
+                  <div style={{ marginBottom: '32px' }}>
+                    <h3 style={{ color: '#1a2332', marginBottom: '16px' }}>Saved Properties ({favorites.filter(f => f.item_type === 'property').length})</h3>
+                    <div className="members-grid">
+                      {favorites.filter(f => f.item_type === 'property' && f.item_data).map((fav) => (
+                        <div key={fav.favorite_id} className="member-card" style={{ cursor: 'pointer' }} data-testid={`saved-property-card-${fav.favorite_id}`}>
+                          <div className="member-info" onClick={() => navigate(`/properties/${fav.item_id}`)}>
+                            <h3>{fav.item_data.city}, {fav.item_data.state}</h3>
+                            <p style={{ color: '#2563eb', fontWeight: '700', fontSize: '18px' }}>${fav.item_data.weekly_rent_per_person}/wk per bedroom</p>
+                          </div>
+                          <div className="member-actions">
+                            <button className="btn btn-danger" onClick={() => removeFavorite(fav.favorite_id)} data-testid={`remove-saved-${fav.favorite_id}`}>
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+
+                {/* Shortlisted Members */}
+                {shortlists.length > 0 && (
+                  <div style={{ marginBottom: '32px' }}>
+                    <h3 style={{ color: '#1a2332', marginBottom: '16px' }}>Shortlisted Members ({shortlists.length})</h3>
+                    <div className="members-grid">
+                      {shortlists.map((item) => (
+                        <div key={item.shortlist_id} className="member-card" data-testid={`shortlist-card-${item.shortlist_id}`}>
+                          <div className="member-avatar">
+                            {item.member.picture ? (
+                              <img src={item.member.picture} alt={item.member.name} />
+                            ) : (
+                              <div className="avatar-placeholder">{item.member.name.charAt(0)}</div>
+                            )}
+                          </div>
+                          <div className="member-info">
+                            <h3>{item.member.name}</h3>
+                            <p className="member-date">Added {new Date(item.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="member-actions">
+                            <button className="btn btn-danger" onClick={() => removeFromShortlist(item.shortlist_id)} data-testid={`remove-shortlist-${item.shortlist_id}`}>
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Saved Members */}
+                {favorites.filter(f => f.item_type === 'member').length > 0 && (
+                  <div>
+                    <h3 style={{ color: '#1a2332', marginBottom: '16px' }}>Saved Members ({favorites.filter(f => f.item_type === 'member').length})</h3>
+                    <div className="members-grid">
+                      {favorites.filter(f => f.item_type === 'member' && f.item_data).map((fav) => (
+                        <div key={fav.favorite_id} className="member-card" data-testid={`saved-member-card-${fav.favorite_id}`}>
+                          <div className="member-avatar">
+                            <div className="avatar-placeholder">{(fav.item_data.name || 'M').charAt(0)}</div>
+                          </div>
+                          <div className="member-info">
+                            <h3>{fav.item_data.name}</h3>
+                            <p className="member-date">Saved {new Date(fav.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="member-actions">
+                            <button className="btn btn-danger" onClick={() => removeFavorite(fav.favorite_id)} data-testid={`remove-saved-${fav.favorite_id}`}>
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
-        )}
+        )}}
         {/* Groups Tab */}
         {activeTab === 'groups' && (
           <div className="groups-section" data-testid="groups-section">
