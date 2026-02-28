@@ -13,11 +13,16 @@ const MemberDashboard = () => {
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [shortlists, setShortlists] = useState([]);
-  const [activeTab, setActiveTab] = useState('browse');
+  const [activeTab, setActiveTab] = useState('properties');
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   
-  // Search/Filter state
+  // Properties state
+  const [allProperties, setAllProperties] = useState([]);
+  const [propertySearch, setPropertySearch] = useState('');
+  const [propertyFilter, setPropertyFilter] = useState({ state: '', bedrooms: '' });
+
+  // Search/Filter state (members)
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     housingType: '',
