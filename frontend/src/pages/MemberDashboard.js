@@ -138,6 +138,20 @@ const MemberDashboard = () => {
     }
   };
 
+  const fetchProperties = async () => {
+    try {
+      const res = await axios.get(`${API}/properties`);
+      setAllProperties(res.data);
+    } catch (e) { /* silent */ }
+  };
+
+  const filteredProperties = allProperties.filter(p => {
+    if (propertySearch && !`${p.city} ${p.state} ${p.address}`.toLowerCase().includes(propertySearch.toLowerCase())) return false;
+    if (propertyFilter.state && p.state !== propertyFilter.state) return false;
+    if (propertyFilter.bedrooms && p.bedrooms !== parseInt(propertyFilter.bedrooms)) return false;
+    return true;
+  });
+
   const fetchShortlists = async () => {
     try {
       const response = await axios.get(`${API}/shortlists`, getAuthConfig());
