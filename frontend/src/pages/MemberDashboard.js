@@ -8,6 +8,67 @@ import './MemberDashboard.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+const MyGroupApplications = ({ currentUser, getAuthConfig }) => {
+  const [apps, setApps] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchApps = async () => {
+    try {
+      const res = await axios.get(`${API}/group-applications/my`, getAuthConfig());
+      setApps(res.data);
+    } catch (e) { /* silent */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchApps(); }, []);
+
+  const withdrawApp = async (appId, status) => {
+    const msg = status === 'approved'
+      ? 'Withdraw this APPROVED application? Group members will be notified.'
+      : status === 'pending'
+      ? 'Withdraw this pending application? Group members will be notified.'
+      : 'Delete this rejected application?';
+    if (!window.confirm(msg)) return;
+    try {
+      await axios.delete(`${API}/group-applications/${appId}`, getAuthConfig());
+      fetchApps();
+    } catch (e) { alert(e.response?.data?.detail || 'Failed to withdraw'); }
+  };
+
+  if (loading) return <p style={{ color: '#6b7280', fontSize: '14px' }}>Loading...</p>;
+  if (apps.length === 0) return <p style={{ color: '#6b7280', fontSize: '14px' }}>No group applications yet. Join a group on a property page, then the group creator can apply.</p>;
+
+  const statusStyle = (s) => ({
+    padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase',
+    background: s === 'approved' ? '#d1fae5' : s === 'rejected' ? '#fef2f2' : '#fef3c7',
+    color: s === 'approved' ? '#059669' : s === 'rejected' ? '#ef4444' : '#d97706'
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} data-testid="my-group-applications">
+      {apps.map(app => (
+        <div key={app.application_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }} data-testid={`my-gapp-${app.application_id}`}>
+          <div>
+            <strong style={{ fontSize: '14px' }}>{app.group_name}</strong>
+            <span style={{ fontSize: '13px', color: '#6b7280' }}> — {app.property_city}, {app.property_state}</span>
+            <div style={{ marginTop: '4px' }}>
+              <span style={statusStyle(app.status)}>{app.status}</span>
+              <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: '8px' }}>{new Date(app.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+          <button
+            onClick={() => withdrawApp(app.application_id, app.status)}
+            style={{ padding: '6px 14px', fontSize: '12px', background: 'none', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+            data-testid={`withdraw-gapp-${app.application_id}`}
+          >
+            {app.status === 'rejected' ? 'Delete' : 'Withdraw'}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const MemberDashboard = () => {
   const navigate = useNavigate();
   const [members, setMembers] = useState([]);
@@ -994,6 +1055,53 @@ const MemberDashboard = () => {
                   />
                   <span style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px', display: 'block' }}>Leave blank to use your username publicly</span>
                 </div>
+              </div>
+
+              {/* About Me - Editable Profile */}
+              <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1a2332' }}>About Me</h3>
+                {[
+                  { key: 'bio', label: 'Short Bio', type: 'textarea', placeholder: 'Tell other members a bit about yourself...' },
+                  { key: 'interests', label: 'Interests & Hobbies', type: 'textarea', placeholder: 'e.g., gardening, reading, cooking...' },
+                  { key: 'daily_routine', label: 'Daily Routine', type: 'textarea', placeholder: 'e.g., Early riser, enjoy quiet evenings...' },
+                  { key: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Brisbane, QLD' },
+                  { key: 'housing_preference', label: 'Housing Preference', type: 'text', placeholder: 'e.g., Shared house, close to transport' },
+                  { key: 'dietary_preferences', label: 'Dietary Preferences', type: 'text', placeholder: 'e.g., Vegetarian, no allergies' },
+                ].map(({ key, label, type, placeholder }) => (
+                  <div key={key} style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>{label}</label>
+                    {type === 'textarea' ? (
+                      <textarea
+                        defaultValue={currentUser?.[key] || ''}
+                        placeholder={placeholder}
+                        rows={3}
+                        onBlur={async (e) => {
+                          try { await axios.patch(`${API}/users/profile`, { [key]: e.target.value }, getAuthConfig()); } catch (err) { /* silent */ }
+                        }}
+                        style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box', resize: 'vertical' }}
+                        data-testid={`profile-${key}-input`}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        defaultValue={currentUser?.[key] || ''}
+                        placeholder={placeholder}
+                        onBlur={async (e) => {
+                          try { await axios.patch(`${API}/users/profile`, { [key]: e.target.value }, getAuthConfig()); } catch (err) { /* silent */ }
+                        }}
+                        style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                        data-testid={`profile-${key}-input`}
+                      />
+                    )}
+                  </div>
+                ))}
+                <p style={{ fontSize: '12px', color: '#9ca3af' }}>Changes save automatically when you click away from a field.</p>
+              </div>
+
+              {/* My Group Applications */}
+              <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1a2332' }}>My Group Applications</h3>
+                <MyGroupApplications currentUser={currentUser} getAuthConfig={getAuthConfig} />
               </div>
 
               {/* Notification Preferences */}

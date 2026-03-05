@@ -1836,17 +1836,22 @@ class UpdateProfileRequest(BaseModel):
     display_name: Optional[str] = None
     avatar_url: Optional[str] = None
     notification_prefs: Optional[dict] = None
+    interests: Optional[str] = None
+    daily_routine: Optional[str] = None
+    housing_preference: Optional[str] = None
+    location: Optional[str] = None
+    mobility_level: Optional[str] = None
+    dietary_preferences: Optional[str] = None
+    bio: Optional[str] = None
 
 @api_router.patch("/users/profile")
 async def update_profile(req: UpdateProfileRequest, user: User = Depends(get_current_user)):
     """Update current user's profile"""
     updates = {}
-    if req.display_name is not None:
-        updates["display_name"] = req.display_name.strip()[:50]
-    if req.avatar_url is not None:
-        updates["avatar_url"] = req.avatar_url
-    if req.notification_prefs is not None:
-        updates["notification_prefs"] = req.notification_prefs
+    for field in ["display_name", "avatar_url", "notification_prefs", "interests", "daily_routine", "housing_preference", "location", "mobility_level", "dietary_preferences", "bio"]:
+        val = getattr(req, field, None)
+        if val is not None:
+            updates[field] = val.strip()[:500] if isinstance(val, str) else val
     if not updates:
         raise HTTPException(status_code=400, detail="No updates provided")
     await db.users.update_one({"user_id": user.user_id}, {"$set": updates})
@@ -1969,6 +1974,33 @@ async def update_group_application_status(application_id: str, request: Request,
             f"/properties/{app_doc['property_id']}"
         )
     return {"message": f"Application {new_status}", "application_id": application_id}
+
+@api_router.delete("/group-applications/{application_id}")
+async def withdraw_group_application(application_id: str, user: User = Depends(get_current_user)):
+    """Withdraw/delete a group application (by any group member)"""
+    app_doc = await db.group_applications.find_one({"application_id": application_id}, {"_id": 0})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Application not found")
+    # Check user is a member of the group
+    group = await db.groups.find_one({"group_id": app_doc["group_id"]}, {"_id": 0})
+    if not group or not any(m["user_id"] == user.user_id for m in group.get("members", [])):
+        raise HTTPException(status_code=403, detail="Only group members can withdraw an application")
+    old_status = app_doc.get("status", "pending")
+    await db.group_applications.delete_one({"application_id": application_id})
+    # If was approved, revert group status back to vacancies
+    if old_status == "approved":
+        await db.groups.update_one({"group_id": app_doc["group_id"]}, {"$set": {"status": "vacancies"}})
+    # Notify group members if was pending or approved
+    if old_status in ("pending", "approved"):
+        for m in app_doc.get("members", []):
+            if m["user_id"] != user.user_id:
+                await create_notification(
+                    m["user_id"], "group_application_withdrawn",
+                    "Group Application Withdrawn",
+                    f"{user.username or user.name} withdrew the group application for {app_doc.get('property_city', '')}, {app_doc.get('property_state', '')}. Status was: {old_status}.",
+                    f"/properties/{app_doc.get('property_id', '')}"
+                )
+    return {"message": "Application withdrawn"}
 
 # ============ CHAT ROUTES (Community + Group) ============
 
