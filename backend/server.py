@@ -925,6 +925,27 @@ async def create_property(property_data: PropertyCreate, user: User = Depends(ge
     
     await db.properties.insert_one(prop_dict)
     
+    # Auto-create a default Property Group
+    city_short = prop_dict.get("city", "HSS")[:10].replace(" ", "")
+    default_group = {
+        "group_id": f"grp_{uuid.uuid4().hex[:8]}",
+        "group_category": "property",
+        "property_id": prop_dict["property_id"],
+        "property_city": prop_dict.get("city", ""),
+        "property_state": prop_dict.get("state", ""),
+        "property_rent": prop_dict.get("weekly_rent_per_person", 0),
+        "name": f"{city_short}-A",
+        "group_type": "Mixed",
+        "status": "open",
+        "max_spots": prop_dict.get("total_bedrooms") or prop_dict.get("available_bedrooms") or 4,
+        "created_by": "system",
+        "creator_name": "System",
+        "members": [],
+        "waitlist": [],
+        "created_at": now
+    }
+    await db.groups.insert_one(default_group)
+    
     return Property(**prop_dict)
 
 @api_router.post("/properties/bulk")
@@ -1444,43 +1465,56 @@ async def remove_favorite(favorite_id: str, user: User = Depends(get_current_use
 # ============ PROPERTY GROUPS ROUTES ============
 
 class CreatePropertyGroupRequest(BaseModel):
-    property_id: str
+    property_id: Optional[str] = None  # None = Member Group, set = Property Group
     name: Optional[str] = ""
     group_type: Optional[str] = ""  # Couples/SingleFemale/SingleMale/Mixed
     is_couple: Optional[bool] = False  # Creator is a couple (counts as 1 spot)
 
 @api_router.post("/groups")
 async def create_property_group(req: CreatePropertyGroupRequest, user: User = Depends(get_current_user)):
-    """Create a new group tied to a property"""
-    # Verify property exists
-    prop = await db.properties.find_one({"property_id": req.property_id}, {"_id": 0})
-    if not prop:
-        raise HTTPException(status_code=404, detail="Property not found")
-    
-    max_spots = prop.get("total_bedrooms") or prop.get("available_bedrooms") or 4
-    
-    # Auto-generate group name: PropertyCity-GroupLetter
-    existing_groups = await db.groups.find({"property_id": req.property_id}).to_list(100)
-    letter = chr(65 + len(existing_groups))  # A, B, C...
-    city_short = prop.get("city", "HSS")[:10].replace(" ", "")
-    auto_name = f"{city_short}-{letter}"
-    
+    """Create a group — either a Member Group (no property) or a Property Group"""
     now = datetime.now(timezone.utc).isoformat()
+    max_spots = 4
+    group_category = "member"
+    prop_city = ""
+    prop_state = ""
+    prop_rent = 0
+    auto_name = ""
+
+    if req.property_id:
+        # Property Group
+        prop = await db.properties.find_one({"property_id": req.property_id}, {"_id": 0})
+        if not prop:
+            raise HTTPException(status_code=404, detail="Property not found")
+        max_spots = prop.get("total_bedrooms") or prop.get("available_bedrooms") or 4
+        group_category = "property"
+        prop_city = prop.get("city", "")
+        prop_state = prop.get("state", "")
+        prop_rent = prop.get("weekly_rent_per_person", 0)
+        existing_groups = await db.groups.find({"property_id": req.property_id}).to_list(100)
+        letter = chr(65 + len(existing_groups))
+        city_short = prop_city[:10].replace(" ", "")
+        auto_name = f"{city_short}-{letter}"
+    else:
+        # Member Group
+        auto_name = f"{user.username or user.name.split()[0]}'s Group"
+
     group_doc = {
         "group_id": f"grp_{uuid.uuid4().hex[:8]}",
-        "property_id": req.property_id,
-        "property_city": prop.get("city", ""),
-        "property_state": prop.get("state", ""),
-        "property_rent": prop.get("weekly_rent_per_person", 0),
+        "group_category": group_category,
+        "property_id": req.property_id or None,
+        "property_city": prop_city,
+        "property_state": prop_state,
+        "property_rent": prop_rent,
         "name": req.name or auto_name,
         "group_type": req.group_type or "Mixed",
-        "status": "vacancies",
+        "status": "open",
         "max_spots": max_spots,
         "created_by": user.user_id,
-        "creator_name": user.name,
+        "creator_name": user.username or user.name,
         "members": [{
             "user_id": user.user_id,
-            "name": user.name,
+            "name": user.username or user.name,
             "is_couple": req.is_couple,
             "joined_at": now
         }],
@@ -1490,6 +1524,18 @@ async def create_property_group(req: CreatePropertyGroupRequest, user: User = De
     await db.groups.insert_one(group_doc)
     group_doc.pop("_id", None)
     return group_doc
+
+@api_router.get("/groups/directory")
+async def group_directory():
+    """Public group directory — all groups across the site"""
+    groups = await db.groups.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    for g in groups:
+        occupied = len(g.get("members", []))
+        g["spots_taken"] = occupied
+        g["spots_available"] = max(0, g.get("max_spots", 4) - occupied)
+        g["waitlist_count"] = len(g.get("waitlist", []))
+        g["display_status"] = "Full" if g["spots_available"] == 0 else "Open"
+    return groups
 
 @api_router.get("/groups")
 async def list_groups(user: User = Depends(get_current_user), property_id: Optional[str] = None):

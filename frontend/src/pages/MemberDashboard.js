@@ -8,6 +8,142 @@ import './MemberDashboard.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+
+const GroupDirectory = ({ currentUser, getAuthConfig, navigate }) => {
+  const [allGroups, setAllGroups] = useState([]);
+  const [filter, setFilter] = useState('all'); // all, property, member, open
+  const [search, setSearch] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupType, setNewGroupType] = useState('Mixed');
+
+  useEffect(() => {
+    axios.get(`${API}/groups/directory`).then(r => setAllGroups(r.data)).catch(() => {});
+  }, []);
+
+  const createMemberGroup = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/groups`, { name: newGroupName, group_type: newGroupType }, getAuthConfig());
+      setShowCreateModal(false);
+      setNewGroupName('');
+      axios.get(`${API}/groups/directory`).then(r => setAllGroups(r.data));
+    } catch (err) { alert(err.response?.data?.detail || 'Failed to create group'); }
+  };
+
+  const filtered = allGroups.filter(g => {
+    if (search && !`${g.name} ${g.property_city} ${g.property_state}`.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filter === 'property' && g.group_category !== 'property') return false;
+    if (filter === 'member' && g.group_category !== 'member') return false;
+    if (filter === 'open' && g.display_status !== 'Open') return false;
+    return true;
+  });
+
+  return (
+    <div data-testid="group-directory-section">
+      <div className="section-header">
+        <h2>Group Directory</h2>
+        <p>Browse all groups across the site — property groups and member groups</p>
+      </div>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          type="text" placeholder="Search groups..." value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ flex: 1, minWidth: '200px', padding: '10px 14px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+          data-testid="group-search-input"
+        />
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ padding: '10px 14px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }} data-testid="group-filter-select">
+          <option value="all">All Groups</option>
+          <option value="property">Property Groups</option>
+          <option value="member">Member Groups</option>
+          <option value="open">Open Only</option>
+        </select>
+        <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ padding: '10px 18px' }} data-testid="create-member-group-btn">
+          + Create Member Group
+        </button>
+      </div>
+      <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '16px' }}>{filtered.length} groups found</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {filtered.map(g => {
+          const isMember = g.members?.some(m => m.user_id === currentUser?.user_id);
+          return (
+            <div key={g.group_id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }} data-testid={`dir-group-${g.group_id}`}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <strong style={{ fontSize: '15px' }}>{g.name}</strong>
+                  <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: g.group_category === 'member' ? '#ede9fe' : '#dbeafe', color: g.group_category === 'member' ? '#7c3aed' : '#2563eb', textTransform: 'uppercase' }}>
+                    {g.group_category}
+                  </span>
+                  <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: g.display_status === 'Open' ? '#d1fae5' : '#fef2f2', color: g.display_status === 'Open' ? '#059669' : '#ef4444' }}>
+                    {g.display_status}
+                  </span>
+                </div>
+                <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0' }}>
+                  {g.property_city ? `${g.property_city}, ${g.property_state}` : 'No property yet'} &middot; {g.group_type} &middot; {g.spots_taken}/{g.max_spots} members
+                  {g.spots_available > 0 && <span style={{ color: '#059669', fontWeight: '600' }}> &middot; {g.spots_available} spot{g.spots_available !== 1 ? 's' : ''} open</span>}
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {isMember && <span style={{ fontSize: '12px', color: '#059669', fontWeight: '600', padding: '4px 10px', background: '#d1fae5', borderRadius: '6px' }}>Joined</span>}
+                {g.property_id && (
+                  <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => navigate(`/properties/${g.property_id}`)} data-testid={`view-property-${g.group_id}`}>
+                    View Property
+                  </button>
+                )}
+                {!isMember && g.display_status === 'Open' && (
+                  <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '12px' }}
+                    onClick={async () => {
+                      try {
+                        await axios.post(`${API}/groups/${g.group_id}/join`, {}, getAuthConfig());
+                        axios.get(`${API}/groups/directory`).then(r => setAllGroups(r.data));
+                      } catch (err) { alert(err.response?.data?.detail || 'Failed to join'); }
+                    }}
+                    data-testid={`join-dir-group-${g.group_id}`}
+                  >
+                    Join
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} data-testid="create-member-group-modal">
+            <h2 style={{ margin: '0 0 16px' }}>Create a Member Group</h2>
+            <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '20px' }}>
+              Start a group to find housemates. Once your group is ready, you can apply for properties together.
+            </p>
+            <form onSubmit={createMemberGroup}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Group Name</label>
+                <input type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} required placeholder="e.g., Brisbane Buddies" style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} data-testid="member-group-name-input" />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '14px' }}>Group Type</label>
+                <select value={newGroupType} onChange={(e) => setNewGroupType(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} data-testid="member-group-type-select">
+                  <option value="Mixed">Mixed</option>
+                  <option value="SingleFemale">Single Female</option>
+                  <option value="SingleMale">Single Male</option>
+                  <option value="Couples">Couples</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} data-testid="submit-member-group-btn">Create Group</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)} style={{ flex: 1 }}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 const MyGroupApplications = ({ currentUser, getAuthConfig }) => {
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -467,6 +603,13 @@ const MemberDashboard = () => {
             Saved ({favorites.length + shortlists.length})
           </button>
           <button
+            className={`tab-btn ${activeTab === 'group-directory' ? 'active' : ''}`}
+            onClick={() => setActiveTab('group-directory')}
+            data-testid="group-directory-tab"
+          >
+            Group Directory
+          </button>
+          <button
             className={`tab-btn ${activeTab === 'groups' ? 'active' : ''}`}
             onClick={() => setActiveTab('groups')}
             data-testid="groups-tab"
@@ -812,6 +955,11 @@ const MemberDashboard = () => {
             )}
           </div>
         )}}
+        {/* Group Directory Tab */}
+        {activeTab === 'group-directory' && (
+          <GroupDirectory currentUser={currentUser} getAuthConfig={getAuthConfig} navigate={navigate} />
+        )}
+
         {/* Groups Tab */}
         {activeTab === 'groups' && (
           <div className="groups-section" data-testid="groups-section">
