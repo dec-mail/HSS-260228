@@ -39,13 +39,14 @@ const MemberProfilePage = () => {
   const startMessage = () => {
     navigate('/dashboard');
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('startMessage', { detail: { userId: profile.user_id, name: profile.name } }));
+      window.dispatchEvent(new CustomEvent('startMessage', { detail: { userId: profile.user_id, name: profile.username || profile.name } }));
     }, 500);
   };
 
   if (loading) return <div className="static-page"><div className="container" style={{ padding: '60px 0', textAlign: 'center' }}>Loading...</div></div>;
   if (!profile) return <div className="static-page"><div className="container" style={{ padding: '60px 0', textAlign: 'center' }}>Member not found</div></div>;
 
+  const displayName = profile.username || profile.name;
   const infoItems = [
     { label: 'Location', value: profile.location },
     { label: 'Housing Preference', value: profile.housing_type?.replace(/_/g, ' ') },
@@ -78,10 +79,10 @@ const MemberProfilePage = () => {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
               <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '700', color: '#6b7280', flexShrink: 0 }}>
-                {profile.name?.charAt(0) || 'M'}
+                {displayName?.charAt(0) || 'M'}
               </div>
               <div>
-                <h1 style={{ margin: '0 0 4px 0', fontSize: '24px', color: '#1a2332' }} data-testid="profile-name">{profile.name}</h1>
+                <h1 style={{ margin: '0 0 4px 0', fontSize: '24px', color: '#1a2332' }} data-testid="profile-name">{displayName}</h1>
                 <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
                   Member since {new Date(profile.created_at).toLocaleDateString()}
                   {profile.location && ` · ${profile.location}`}

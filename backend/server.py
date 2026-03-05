@@ -347,19 +347,19 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
 # ============ USERNAME & NOTIFICATION HELPERS ============
 
 async def generate_username(name: str) -> str:
-    """Generate username: GivenNameN e.g. JaneD, JaneD2"""
+    """Generate username: GivenName01, GivenName02, etc."""
     parts = name.strip().split()
     given = parts[0] if parts else "User"
-    last_initial = parts[-1][0].upper() if len(parts) > 1 else ""
-    base = f"{given}{last_initial}"
-    base = re.sub(r'[^A-Za-z0-9]', '', base)
-    # Check uniqueness
-    candidate = base
-    counter = 2
-    while await db.users.find_one({"username": candidate}):
-        candidate = f"{base}{counter}"
+    given = re.sub(r'[^A-Za-z]', '', given)
+    if not given:
+        given = "User"
+    # Find next available sequential number
+    counter = 1
+    while True:
+        candidate = f"{given}{counter:02d}"
+        if not await db.users.find_one({"username": candidate}):
+            return candidate
         counter += 1
-    return candidate
 
 async def create_notification(user_id: str, notif_type: str, title: str, message: str, link: str = ""):
     """Create in-app notification + optional email/SMS"""
@@ -1181,12 +1181,12 @@ async def list_members(user: User = Depends(get_current_user)):
         if user.role != "admin":
             anonymized_members = []
             for member in members:
-                # Create anonymized copy
                 anonymized = {
                     "user_id": member["user_id"],
-                    "email": "***@***.***",
-                    "name": member["name"].split()[0] if member["name"] else "Member",
+                    "username": member.get("username", member["name"].split()[0] if member.get("name") else "Member"),
+                    "name": member.get("username", member["name"].split()[0] if member.get("name") else "Member"),
                     "picture": member.get("picture"),
+                    "avatar_url": member.get("avatar_url"),
                     "role": member["role"],
                     "created_at": member["created_at"]
                 }
@@ -1216,8 +1216,10 @@ async def get_member_profile(user_id: str, user: User = Depends(get_current_user
     
     profile = {
         "user_id": member["user_id"],
-        "name": member.get("name", "Member"),
+        "username": member.get("username"),
+        "name": member.get("username", member.get("name", "Member")) if user.role != "admin" else member.get("name", "Member"),
         "picture": member.get("picture"),
+        "avatar_url": member.get("avatar_url"),
         "role": member.get("role"),
         "created_at": member.get("created_at"),
     }

@@ -599,14 +599,13 @@ const MemberDashboard = () => {
                   <div key={member.user_id} className="member-card" data-testid={`member-card-${member.user_id}`}>
                     <div className="member-avatar">
                       {member.picture ? (
-                        <img src={member.picture} alt={member.name} />
+                        <img src={member.picture} alt={member.username || member.name} />
                       ) : (
-                        <div className="avatar-placeholder">{member.name.charAt(0)}</div>
+                        <div className="avatar-placeholder">{(member.username || member.name).charAt(0)}</div>
                       )}
                     </div>
                     <div className="member-info">
-                      <h3 style={{ cursor: 'pointer', color: '#2563eb' }} onClick={() => navigate(`/members/${member.user_id}`)} data-testid={`member-name-${member.user_id}`}>{member.name}</h3>
-                      <p className="member-email">{member.email}</p>
+                      <h3 style={{ cursor: 'pointer', color: '#2563eb' }} onClick={() => navigate(`/members/${member.user_id}`)} data-testid={`member-name-${member.user_id}`}>{member.username || member.name}</h3>
                       <p className="member-date">Member since {new Date(member.created_at).toLocaleDateString()}</p>
                     </div>
                     <div className="member-actions">
@@ -620,7 +619,7 @@ const MemberDashboard = () => {
                       </button>
                       <button
                         className="btn btn-sm"
-                        onClick={() => startNewMessage(member.user_id, member.name)}
+                        onClick={() => startNewMessage(member.user_id, member.username || member.name)}
                         style={{ marginRight: '8px', fontSize: '12px', padding: '4px 10px' }}
                         data-testid={`msg-member-btn-${member.user_id}`}
                       >
@@ -704,13 +703,13 @@ const MemberDashboard = () => {
                         <div key={item.shortlist_id} className="member-card" data-testid={`shortlist-card-${item.shortlist_id}`}>
                           <div className="member-avatar">
                             {item.member.picture ? (
-                              <img src={item.member.picture} alt={item.member.name} />
+                              <img src={item.member.picture} alt={item.member.username || item.member.name} />
                             ) : (
-                              <div className="avatar-placeholder">{item.member.name.charAt(0)}</div>
+                              <div className="avatar-placeholder">{(item.member.username || item.member.name).charAt(0)}</div>
                             )}
                           </div>
                           <div className="member-info">
-                            <h3>{item.member.name}</h3>
+                            <h3>{item.member.username || item.member.name}</h3>
                             <p className="member-date">Added {new Date(item.created_at).toLocaleDateString()}</p>
                           </div>
                           <div className="member-actions">
